@@ -40,38 +40,36 @@ Environment variables override config file directives.
 Configuration
 -------------
 
-The config file needs `[mute]` section, where `mute` directives are specified.
-
 
 .. code-block::
-
-    [mute]
 
     # When a command matched this criteria, the output will be muted.
     # Exit codes and stdout patterns are grouped by "AND", requiring both to match.
     # Multiple sections will be grouped by "OR", so matching any section will suppress the output.
     # stdout is checked by matching with regular expression patterns.
 
-    [[ mute.default ]]
+    [[ default ]]
     exit_codes = [0]  # any of exit codes could match
 
     # OR
-    [[ mute.default ]]
+    [[ default ]]
     stdout_patterns = [".+ OK .+"]  # stdout matches any listed regex patterns
 
     # OR
-    [[ mute.default ]]
+    [[ default ]]
     exit_codes = [1, 2]  # any program that exits with either 1,2 AND prints OK
     stdout_patterns = ["OK"]
 
+    [ commands ]
     # Command specific settings, overriding default settings, not stacking with default.
     # This applies to any command starting with 'user': 'user' and 'useradd' and 'userdel'
-    [[ mute.commands.user ]]
-    exit_codes = [0]  # any command starting with "user" will match ONLY when exit code is 0
 
-    # Command specific settings can also be grouped with OR by repeating the settings
-    [[ mute.commands.user ]]
-    stdout_patterns = ["^$"]  # now any command starting with "user" will match when output is empty regardless of exit code
+      [[ commands.user ]]
+      exit_codes = [0]  # any command starting with "user" will match ONLY when exit code is 0
+
+      # Command specific settings can also be grouped with OR by repeating the settings
+      [[ commands.user ]]
+      stdout_patterns = ["^$"]  # now any command starting with "user" will match when output is empty regardless of exit code
 
 
 

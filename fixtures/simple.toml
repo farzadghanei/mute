@@ -1,0 +1,6 @@
+[[ default ]]
+exit_codes = [0]
+
+[[ default ]]
+exit_codes = [1, 2]
+stdout_patterns = ["OK"]
