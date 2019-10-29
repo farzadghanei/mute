@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"strings"
 )
 
 // EXEC_ERR is exit code when failed to execute the command
@@ -49,4 +50,23 @@ func printMatched(cmd string, ctx *execContext) {
 	if ctx.ExitCode != 0 {
 		fmt.Fprintf(ctx.ErrWriter, "%v", ctx.StdoutText)
 	}
+}
+
+// cmdCriteria returns the Criteria that the cmd should be matched against from the Conf
+// Each command is matched against a criteria. The Conf has Criterias
+// either per command or a default one that is used for all commands.
+// cmdCriteria finds the corresponding Criterian from a Conf that the cmd
+// should be checked against
+func cmdCriteria(cmd string, conf *Conf) *Criteria {
+	matched := ""
+	for key, _ := range conf.Commands {
+		if len(key) > len(matched) && strings.HasPrefix(cmd, key) {
+			matched = key
+		}
+	}
+	if matched == "" { // no command specific criteria matched cmd
+		return &conf.Default
+	}
+	criteria := conf.Commands[matched]
+	return &criteria
 }
