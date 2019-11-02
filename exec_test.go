@@ -52,11 +52,12 @@ func TestCmdCriteriaReturnCommandSpecific(t *testing.T) {
 func TestMatchesCriteria(t *testing.T) {
 	conf, _ := ReadConfFile("fixtures/simple.toml")
 	crt := conf.Default
-	got := matchesCriteria(&crt, 0, "")
+	stdout := ""
+	got := matchesCriteria(&crt, 0, &stdout)
 	if !got {
 		t.Errorf("matchesCriteria 0 default want true got false")
 	}
-	got = matchesCriteria(&crt, 3, "")
+	got = matchesCriteria(&crt, 3, &stdout)
 	if got {
 		t.Errorf("matchesCriteria 3 default want false got true")
 	}
