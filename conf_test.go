@@ -65,6 +65,17 @@ func TestCriteriaEqual(t *testing.T) {
 	}
 }
 
+func TestDefaultConf(t *testing.T) {
+	c1 := NewCriterion([]int{0}, []string{})
+	crt1 := new(Criteria)
+	crt1.add(c1)
+
+	conf := DefaultConf()
+	if !conf.Default.equal(crt1) {
+		t.Errorf("DefaultConf().Default didn't match zero exit code")
+	}
+}
+
 func TestReadConfFileError(t *testing.T) {
 	_, err := ReadConfFile("fixtures/no_such_file.toml")
 	if err == nil {

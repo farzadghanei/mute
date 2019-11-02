@@ -48,3 +48,16 @@ func TestCmdCriteriaReturnCommandSpecific(t *testing.T) {
 		t.Errorf("cmdCriteria should have returned longest matched cmd but didn't")
 	}
 }
+
+func TestMatchesCriteria(t *testing.T) {
+	conf, _ := ReadConfFile("fixtures/simple.toml")
+	crt := conf.Default
+	got := matchesCriteria(&crt, 0, "")
+	if !got {
+		t.Errorf("matchesCriteria 0 default want true got false")
+	}
+	got = matchesCriteria(&crt, 3, "")
+	if got {
+		t.Errorf("matchesCriteria 3 default want false got true")
+	}
+}

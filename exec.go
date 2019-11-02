@@ -14,6 +14,7 @@ const EXEC_ERR = 127
 
 // execContext is the details of an executed command, and the expected conditions to act on
 type execContext struct {
+	Cmd        string
 	ExitCode   int
 	StdoutText string
 	StderrText string
@@ -40,16 +41,24 @@ func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer) (cmdExitCo
 			cmdExitCode = EXEC_ERR
 		}
 	}
-	ctx := execContext{ExitCode: cmdExitCode, StdoutText: stdoutBuffer.String(), Conf: conf, OutWriter: outWriter, ErrWriter: outWriter}
-	printMatched(cmd, &ctx)
+	ctx := execContext{Cmd: cmd, ExitCode: cmdExitCode, StdoutText: stdoutBuffer.String(), Conf: conf, OutWriter: outWriter, ErrWriter: outWriter}
+	crt := cmdCriteria(ctx.Cmd, ctx.Conf)
+	if !matchesCriteria(crt, ctx.ExitCode, ctx.StdoutText) {
+		fmt.Fprintf(ctx.OutWriter, "%v", ctx.StdoutText)
+	}
 	return cmdExitCode
 }
 
-func printMatched(cmd string, ctx *execContext) {
-	// @TODO: match context with Conf to decide on print
-	if ctx.ExitCode != 0 {
-		fmt.Fprintf(ctx.ErrWriter, "%v", ctx.StdoutText)
+// matchesCriteria indicates if results of an exec matches a given Criteria
+// to decide if a program should be muted or not, its exit code and stdout/stderr is matched
+// against the configured Criteria. This function helps to decide on mute or not
+func matchesCriteria(criteria *Criteria, code int, stdout string) bool {
+	for _, crt := range *criteria {
+		if codesContain(crt.ExitCodes, code) {
+			return true
+		}
 	}
+	return false
 }
 
 // cmdCriteria returns the Criteria that the cmd should be matched against from the Conf

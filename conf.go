@@ -27,6 +27,17 @@ func NewCriterion(codes []int, patterns []string) *Criterion {
 	return c
 }
 
+// DefaultConf returns a Conf to use when there is no conf file to read
+// It's a Conf with a Default Criteria to mute only successful
+// runs (zero exit code)
+func DefaultConf() *Conf {
+	criterion := NewCriterion([]int{0}, []string{})
+	conf := new(Conf)
+	crt := &conf.Default
+	crt.add(criterion)
+	return conf
+}
+
 func (c *Criteria) add(items ...*Criterion) *Criteria {
 	*c = append(*c, items...)
 	return c
