@@ -83,6 +83,7 @@ func cmdCriteria(cmd string, conf *Conf) *Criteria {
 	return &criteria
 }
 
+// stdoutMatches checks if string matches any of the specified StdoutPattern regex patterns
 func stdoutMatches(patterns []*StdoutPattern, stdout *string) bool {
 	for _, p := range patterns {
 		if p.Regexp.MatchString(*stdout) {

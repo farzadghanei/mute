@@ -6,10 +6,12 @@ import (
 	"regexp"
 )
 
+// StdoutPattern hold regex pattern to match stdout with
 type StdoutPattern struct {
 	Regexp *regexp.Regexp
 }
 
+// StdoutPattern.UnmarshalText reads the regex pattern from a byte slice
 func (s *StdoutPattern) UnmarshalText(text []byte) error {
 	var err error
 	re, err := regexp.Compile(string(text))
@@ -17,6 +19,7 @@ func (s *StdoutPattern) UnmarshalText(text []byte) error {
 	return err
 }
 
+// NewStdoutPattern returns a pointer to a StdoutPattern object using the regex pattern string
 func NewStdoutPattern(pattern string) *StdoutPattern {
 	var stdp StdoutPattern
 	var re *regexp.Regexp
@@ -31,6 +34,7 @@ type Criterion struct {
 	StdoutPatterns []*StdoutPattern `toml:"stdout_patterns"`
 }
 
+// Criterion.IsEmpty checks if a Criterion is empty (no exit codes, no patterns)
 func (c *Criterion) IsEmpty() bool {
 	return len(c.ExitCodes) < 1 && len(c.StdoutPatterns) < 1
 }
@@ -44,6 +48,7 @@ type Conf struct {
 	Commands map[string]Criteria
 }
 
+// NewCriterion returns pointer to Criterion with specified exit codes and regex patterns from strings
 func NewCriterion(codes []int, patterns []string) *Criterion {
 	c := new(Criterion)
 	c.ExitCodes = codes
@@ -66,6 +71,7 @@ func DefaultConf() *Conf {
 	return conf
 }
 
+// Criteria.add adds more Criterions to current Criteria
 func (c *Criteria) add(items ...*Criterion) *Criteria {
 	*c = append(*c, items...)
 	return c
