@@ -6,6 +6,8 @@ import (
 	"regexp"
 )
 
+const Version string = "0.1.0"
+
 // StdoutPattern hold regex pattern to match stdout with
 type StdoutPattern struct {
 	Regexp *regexp.Regexp
