@@ -14,13 +14,18 @@ func TestCodesContain(t *testing.T) {
 	}
 }
 
-func TestStringsContain(t *testing.T) {
-	haystack := []string{"hi", " with spaces ", "?"}
-	if !stringsContain(haystack, " with spaces ") {
-		t.Errorf("stringsContain got 'false' want 'true'")
+func TestStdoutPatternsContain(t *testing.T) {
+	stdp1 := NewStdoutPattern("hi")
+	stdp2 := NewStdoutPattern(".+not[1-9]+so.*simple")
+	stdp3 := NewStdoutPattern("I was 3rd")
+	stdp4 := NewStdoutPattern(".+not[1-9]+so.*close")
+
+	haystack := []*StdoutPattern{stdp1, stdp2, stdp3}
+	if !stdoutPatternsContain(haystack, stdp2) {
+		t.Errorf("stdoutPatternsContain got 'false' want 'true'")
 	}
-	if stringsContain(haystack, "nope") {
-		t.Errorf("stringsContain got 'true' want 'false'")
+	if stdoutPatternsContain(haystack, stdp4) {
+		t.Errorf("stdoutPatternsContain got 'true' want 'false'")
 	}
 }
 

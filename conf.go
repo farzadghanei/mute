@@ -3,12 +3,32 @@ package mute
 import (
 	"github.com/BurntSushi/toml"
 	"io/ioutil"
+	"regexp"
 )
+
+type StdoutPattern struct {
+	Regexp *regexp.Regexp
+}
+
+func (s *StdoutPattern) UnmarshalText(text []byte) error {
+	var err error
+	re, err := regexp.Compile(string(text))
+	s.Regexp = re
+	return err
+}
+
+func NewStdoutPattern(pattern string) *StdoutPattern {
+	var stdp StdoutPattern
+	var re *regexp.Regexp
+	re = regexp.MustCompile(pattern)
+	stdp = StdoutPattern{Regexp: re}
+	return &stdp
+}
 
 // Criterion is expected exit codes and stdout patterns to mute a process
 type Criterion struct {
-	ExitCodes      []int    `toml:"exit_codes"`
-	StdoutPatterns []string `toml:"stdout_patterns"`
+	ExitCodes      []int            `toml:"exit_codes"`
+	StdoutPatterns []*StdoutPattern `toml:"stdout_patterns"`
 }
 
 // Criteria is a list of Criterion that if a process matched any of, it'll be muted
@@ -23,7 +43,11 @@ type Conf struct {
 func NewCriterion(codes []int, patterns []string) *Criterion {
 	c := new(Criterion)
 	c.ExitCodes = codes
-	c.StdoutPatterns = patterns
+	var stdp *StdoutPattern
+	for _, p := range patterns {
+		stdp = NewStdoutPattern(p)
+		c.StdoutPatterns = append(c.StdoutPatterns, stdp)
+	}
 	return c
 }
 
@@ -53,10 +77,11 @@ func codesContain(codes []int, code int) bool {
 	return false
 }
 
-// stringsContains search through a slice os strings for a given string
-func stringsContain(haystack []string, needle string) bool {
+// stdoutPatternsContain searches through a slice of regex patterns for a given regex patterns
+func stdoutPatternsContain(haystack []*StdoutPattern, needle *StdoutPattern) bool {
+	needleStr := needle.Regexp.String()
 	for _, item := range haystack {
-		if item == needle {
+		if item.Regexp.String() == needleStr {
 			return true
 		}
 	}
@@ -74,7 +99,7 @@ func (c *Criterion) equal(c2 *Criterion) bool {
 		}
 	}
 	for _, pattern := range c.StdoutPatterns {
-		if !stringsContain(c2.StdoutPatterns, pattern) {
+		if !stdoutPatternsContain(c2.StdoutPatterns, pattern) {
 			return false
 		}
 	}
