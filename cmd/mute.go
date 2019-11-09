@@ -15,6 +15,10 @@ func main() {
 	// use config file if readable, otherwise use a default conf
 	// to mute zero exit codes
 	confPath := "/etc/mute.toml"
+	envConf, envSet := os.LookupEnv("MUTE_CONFIG")
+	if envSet {
+		confPath = envConf
+	}
 	conf, err := mute.ReadConfFile(confPath)
 	if err != nil {
 		conf = *mute.DefaultConf()
