@@ -31,6 +31,10 @@ type Criterion struct {
 	StdoutPatterns []*StdoutPattern `toml:"stdout_patterns"`
 }
 
+func (c *Criterion) IsEmpty() bool {
+	return len(c.ExitCodes) < 1 && len(c.StdoutPatterns) < 1
+}
+
 // Criteria is a list of Criterion that if a process matched any of, it'll be muted
 type Criteria []*Criterion
 

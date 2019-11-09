@@ -52,8 +52,13 @@ func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer) (cmdExitCo
 // against the configured Criteria. This function helps to decide on mute or not
 func matchesCriteria(criteria *Criteria, code int, stdout *string) bool {
 	for _, crt := range *criteria {
-		if codesContain(crt.ExitCodes, code) {
-			return true
+		if crt.IsEmpty() {
+			continue
+		}
+		if len(crt.ExitCodes) < 1 || codesContain(crt.ExitCodes, code) {
+			if len(crt.StdoutPatterns) < 1 || stdoutMatches(crt.StdoutPatterns, stdout) {
+				return true
+			}
 		}
 	}
 	return false
@@ -76,4 +81,13 @@ func cmdCriteria(cmd string, conf *Conf) *Criteria {
 	}
 	criteria := conf.Commands[matched]
 	return &criteria
+}
+
+func stdoutMatches(patterns []*StdoutPattern, stdout *string) bool {
+	for _, p := range patterns {
+		if p.Regexp.MatchString(*stdout) {
+			return true
+		}
+	}
+	return false
 }

@@ -29,6 +29,23 @@ func TestStdoutPatternsContain(t *testing.T) {
 	}
 }
 
+func TestCriterionEmpty(t *testing.T) {
+	c1 := NewCriterion([]int{0}, []string{})
+	c2 := NewCriterion([]int{}, []string{""})
+	c3 := NewCriterion([]int{}, []string{})
+
+	if c1.IsEmpty() {
+		t.Errorf("Criterion with exit codes IsEmpty got 'true' want 'false'")
+	}
+	if c2.IsEmpty() {
+		t.Errorf("Criterion with patterns IsEmpty got 'true' want 'false'")
+	}
+	if !c3.IsEmpty() {
+		t.Errorf("Empty Criterion.IsEmpty 'false' want 'true'")
+	}
+
+}
+
 func TestCriterionEqual(t *testing.T) {
 	c1 := NewCriterion([]int{0, 1, 2}, []string{})
 	c2 := NewCriterion([]int{0, 1, 2}, []string{})

@@ -53,12 +53,17 @@ func TestMatchesCriteria(t *testing.T) {
 	conf, _ := ReadConfFile("fixtures/simple.toml")
 	crt := conf.Default
 	stdout := ""
-	got := matchesCriteria(&crt, 0, &stdout)
-	if !got {
-		t.Errorf("matchesCriteria 0 default want true got false")
+	if !matchesCriteria(&crt, 0, &stdout) {
+		t.Errorf("matchesCriteria 0 default want 'true' got 'false'")
 	}
-	got = matchesCriteria(&crt, 3, &stdout)
-	if got {
-		t.Errorf("matchesCriteria 3 default want false got true")
+	if matchesCriteria(&crt, 3, &stdout) {
+		t.Errorf("matchesCriteria 3 default want 'false' got 'true'")
+	}
+	if matchesCriteria(&crt, 1, &stdout) {
+		t.Errorf("matchesCriteria 1 empty stdout want 'false' got 'true'")
+	}
+	stdout = "OK"
+	if !matchesCriteria(&crt, 1, &stdout) {
+		t.Errorf("matchesCriteria 1 matching stdout want 'true' got 'false'")
 	}
 }
