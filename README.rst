@@ -33,8 +33,6 @@ Environment Variables
 Environment variables override config file directives.
 
   * `MUTE_CONFIG`: full/relative path to the config file. default is `/etc/mute.toml`, no file no issue.
-  * `MUTE_EXIT_CODES`: comma separated list of exit codes to suppress (same as `exit_codes` in `mute.default` config)
-  * `MUTE_STDOUT_PATTERN`: regex pattern to suppress the output when stdout matches
 
 
 Configuration
