@@ -10,19 +10,19 @@ import (
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Fprintf(os.Stderr, "version %v. Usage: %v COMMAND", mute.Version, os.Args[0])
-		os.Exit(mute.EXEC_ERR)
+		os.Exit(mute.ExitErrExec)
 	}
-	// use config file if readable, otherwise use a default conf
+	// use config file if accessible, otherwise use a default conf
 	// to mute zero exit codes
-	confPath := "/etc/mute.toml"
-	envConf, envSet := os.LookupEnv("MUTE_CONFIG")
-	if envSet {
-		confPath = envConf
-	}
-	conf, err := mute.ReadConfFile(confPath)
+	conf, err := mute.GetCmdConf()
 	if err != nil {
-		conf = *mute.DefaultConf()
+		if _, ok := err.(mute.ConfAccessError); ok {
+			conf = mute.DefaultConf()
+		} else {
+			fmt.Fprintf(os.Stderr, "config error:  %v", err)
+			os.Exit(mute.ExitErrConf)
+		}
 	}
-	exitCode := mute.Exec(os.Args[1], os.Args[2:], &conf, os.Stdout)
+	exitCode := mute.Exec(os.Args[1], os.Args[2:], conf, os.Stdout)
 	os.Exit(exitCode)
 }

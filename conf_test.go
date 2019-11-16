@@ -1,6 +1,7 @@
 package mute
 
 import (
+	"os"
 	"testing"
 )
 
@@ -103,6 +104,9 @@ func TestReadConfFileError(t *testing.T) {
 	if err == nil {
 		t.Errorf("ReadConfFile should have returned error")
 	}
+	if _, ok := err.(ConfAccessError); !ok {
+		t.Errorf("ReadConfFile should have returned ConfAccessError")
+	}
 }
 
 func TestReadConfFileSimple(t *testing.T) {
@@ -116,8 +120,8 @@ func TestReadConfFileSimple(t *testing.T) {
 		t.Errorf("ReadConfFile had error: %v", err)
 	}
 
-	if !want.equal(&got) {
-		t.Errorf("ReadConfFileSimple didn't match want %v got %v", want, got)
+	if !want.equal(got) {
+		t.Errorf("ReadConfFile simple didn't match want %v got %v", want, got)
 	}
 
 	c3 := NewCriterion([]int{1}, []string{})
@@ -125,14 +129,45 @@ func TestReadConfFileSimple(t *testing.T) {
 	extraCodesConf := new(Conf)
 	extraCodesConf.Default.add(c1, c3)
 
-	if extraCodesConf.equal(&got) {
-		t.Errorf("ReadConfFileSimple matched extra codes conf")
+	if extraCodesConf.equal(got) {
+		t.Errorf("ReadConfFile simple matched extra codes conf")
 	}
 
 	missingCodesConf := new(Conf)
 	missingCodesConf.Default.add(c1)
 
-	if missingCodesConf.equal(&got) {
-		t.Errorf("ReadConfFileSimple matched missing codes conf")
+	if missingCodesConf.equal(got) {
+		t.Errorf("ReadConfFile simple matched missing codes conf")
 	}
+}
+
+func TestGetCmdConf(t *testing.T) {
+	os.Setenv("MUTE_CONFIG", "fixtures/simple.toml")
+	defer os.Unsetenv("MUTE_CONFIG")
+	want := createSimpleConf()
+	defaultConf := DefaultConf()
+	got, err := GetCmdConf()
+	if err != nil {
+		t.Errorf("GetCmdConf simple want no error, got: %v", err)
+	}
+	if !want.equal(got) {
+		t.Errorf("GetCmdConf simple conf want simple %v got %v", want, got)
+	}
+
+	os.Setenv("MUTE_CONFIG", "")
+	got, err = GetCmdConf()
+	if err != nil {
+		t.Errorf("GetCmdConf empty env want no error, got: %v", err)
+	}
+	if !defaultConf.equal(got) {
+		t.Errorf("GetCmdConf empty env conf want default conf, got %v", got)
+	}
+}
+
+func createSimpleConf() *Conf {
+	c1 := NewCriterion([]int{0}, []string{})
+	c2 := NewCriterion([]int{1, 2}, []string{"OK"})
+	conf := new(Conf)
+	conf.Default.add(c1).add(c2)
+	return conf
 }

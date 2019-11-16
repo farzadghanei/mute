@@ -9,8 +9,8 @@ import (
 	"strings"
 )
 
-// EXEC_ERR is exit code when failed to execute the command
-const EXEC_ERR = 127
+// ExitErrExec is exit code when failed to execute the command
+const ExitErrExec = 127
 
 // execContext is the details of an executed command, and the expected conditions to act on
 type execContext struct {
@@ -35,7 +35,7 @@ func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer) (cmdExitCo
 		case *exec.ExitError:
 			cmdExitCode = e.ExitCode()
 		default:
-			cmdExitCode = EXEC_ERR
+			cmdExitCode = ExitErrExec
 		}
 	}
 	stdoutStr := stdoutBuffer.String()

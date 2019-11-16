@@ -1,12 +1,18 @@
+// mute executes programs suppressing std streams if required
 package mute
 
 import (
 	"github.com/BurntSushi/toml"
 	"io/ioutil"
+	"os"
 	"regexp"
 )
 
+// Version is the program version
 const Version string = "0.1.0"
+
+// ExitErrConf is exit code when config is invalid
+const ExitErrConf = 126
 
 // StdoutPattern hold regex pattern to match stdout with
 type StdoutPattern struct {
@@ -48,6 +54,12 @@ type Criteria []*Criterion
 type Conf struct {
 	Default  Criteria
 	Commands map[string]Criteria
+}
+
+// ConfAccessError represents errors when accessing to Config files
+type ConfAccessError struct {
+	err  error
+	Path string
 }
 
 // NewCriterion returns pointer to Criterion with specified exit codes and regex patterns from strings
@@ -146,14 +158,37 @@ func (c *Conf) equal(c2 *Conf) bool {
 	return c.Default.equal(&(c2.Default))
 }
 
+func (e ConfAccessError) Error() string {
+	return e.err.Error()
+}
+
 // ReadConfFile reads config file and returns Conf
-func ReadConfFile(path string) (Conf, error) {
+func ReadConfFile(path string) (*Conf, error) {
 	var conf Conf
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
-		return conf, err
+		return &conf, ConfAccessError{err: err, Path: path}
 	}
 	contentStr := string(content)
 	_, err = toml.Decode(contentStr, &conf)
+	return &conf, err
+}
+
+// GetCmdConf returns the Conf that the mute cmd will use based on env vars
+func GetCmdConf() (*Conf, error) {
+	var conf *Conf
+	var err error
+	confPath := "/etc/mute.toml"
+
+	envConfPath, envConfSet := os.LookupEnv("MUTE_CONFIG")
+	if envConfSet {
+		confPath = envConfPath
+		if confPath == "" {
+			conf = DefaultConf()
+			return conf, err
+		}
+	}
+
+	conf, err = ReadConfFile(confPath)
 	return conf, err
 }
