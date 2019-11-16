@@ -2,10 +2,13 @@
 package mute
 
 import (
+	"fmt"
 	"github.com/BurntSushi/toml"
 	"io/ioutil"
 	"os"
 	"regexp"
+	"strconv"
+	"strings"
 )
 
 // Version is the program version
@@ -27,6 +30,11 @@ func (s *StdoutPattern) UnmarshalText(text []byte) error {
 	return err
 }
 
+// StdoutPattern.String return the regex pattern string
+func (s *StdoutPattern) String() string {
+	return s.Regexp.String()
+}
+
 // NewStdoutPattern returns a pointer to a StdoutPattern object using the regex pattern string
 func NewStdoutPattern(pattern string) *StdoutPattern {
 	var stdp StdoutPattern
@@ -40,6 +48,18 @@ func NewStdoutPattern(pattern string) *StdoutPattern {
 type Criterion struct {
 	ExitCodes      []int            `toml:"exit_codes"`
 	StdoutPatterns []*StdoutPattern `toml:"stdout_patterns"`
+}
+
+// Criterion.String return a string desc to help debugging and inspecting data
+// This string is not guaranteed to be structured nor accurate
+func (c *Criterion) String() string {
+	var codes []string
+
+	for _, code := range c.ExitCodes {
+		codes = append(codes, strconv.Itoa(code))
+	}
+
+	return fmt.Sprintf("<Criterion codes=\"%s\" patterns_count=\"%d\">", strings.Join(codes, ","), len(c.StdoutPatterns))
 }
 
 // Criterion.IsEmpty checks if a Criterion is empty (no exit codes, no patterns)
@@ -172,6 +192,43 @@ func ReadConfFile(path string) (*Conf, error) {
 	contentStr := string(content)
 	_, err = toml.Decode(contentStr, &conf)
 	return &conf, err
+}
+
+// ConfFromEnvStr returns a Conf populated by strings as accepted environment variables
+// If the strings are empty, and empty Conf with no Criterion will be returned
+func ConfFromEnvStr(exitCodesStr, pattern string) (*Conf, error) {
+	var err error
+	var exitCodes []int
+	var stdp StdoutPattern
+	var reg *regexp.Regexp
+	criterion := new(Criterion)
+	conf := new(Conf)
+
+	if exitCodesStr != "" {
+		codeStrList := strings.Split(exitCodesStr, ",")
+		for _, s := range codeStrList {
+			i, err := strconv.Atoi(s)
+			if err != nil {
+				return conf, err
+			}
+			exitCodes = append(exitCodes, i)
+		}
+	}
+	criterion.ExitCodes = exitCodes
+
+	if pattern != "" {
+		if reg, err = regexp.Compile(pattern); err != nil {
+			return conf, err
+		}
+		stdp = StdoutPattern{Regexp: reg}
+		criterion.StdoutPatterns = []*StdoutPattern{&stdp}
+	}
+
+	if !criterion.IsEmpty() {
+		conf.Default.add(criterion)
+	}
+
+	return conf, err
 }
 
 // GetCmdConf returns the Conf that the mute cmd will use based on env vars

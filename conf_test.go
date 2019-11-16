@@ -44,7 +44,6 @@ func TestCriterionEmpty(t *testing.T) {
 	if !c3.IsEmpty() {
 		t.Errorf("Empty Criterion.IsEmpty 'false' want 'true'")
 	}
-
 }
 
 func TestCriterionEqual(t *testing.T) {
@@ -63,6 +62,27 @@ func TestCriterionEqual(t *testing.T) {
 	c2 = NewCriterion([]int{0, 1, 2}, []string{"ok"})
 	if c1.equal(c2) {
 		t.Errorf("Criterion.equal unmatched patterns got 'true' want 'false'")
+	}
+}
+
+func TestCriterionString(t *testing.T) {
+	var want, got string
+	var c1 *Criterion
+
+	c1 = NewCriterion([]int{0}, []string{})
+	want = "<Criterion codes=\"0\" patterns_count=\"0\">"
+	got = c1.String()
+
+	if want != got {
+		t.Errorf("Criterion String failed. want: '%v' got '%v'", want, got)
+	}
+
+	c1 = NewCriterion([]int{0}, []string{"OK"})
+	want = "<Criterion codes=\"0\" patterns_count=\"1\">"
+	got = c1.String()
+
+	if want != got {
+		t.Errorf("Criterion String failed. want: '%v' got '%v'", want, got)
 	}
 }
 
@@ -141,6 +161,40 @@ func TestReadConfFileSimple(t *testing.T) {
 	}
 }
 
+func TestConfFromEnvStr(t *testing.T) {
+	var got, want, defaultConf *Conf
+	var err error
+	defaultConf = DefaultConf()
+
+	want = new(Conf)
+	got, err = ConfFromEnvStr("", "")
+	if err != nil {
+		t.Errorf("ConfFromEnvStr empty want no error, got: %v", err)
+	}
+	if !want.equal(got) {
+		t.Errorf("ConfFromEnvStr want empty conf, got: %v", got)
+	}
+
+	got, err = ConfFromEnvStr("0", "")
+	if err != nil {
+		t.Errorf("ConfFromEnvStr default want no error, got: %v", err)
+	}
+	if !defaultConf.equal(got) {
+		t.Errorf("ConfFromEnvStr want default conf, got: %v", got)
+	}
+
+	want = new(Conf)
+	c1 := NewCriterion([]int{1, 2}, []string{"[0-9]test"})
+	want.Default.add(c1)
+	got, err = ConfFromEnvStr("1,2", "[0-9]test")
+	if err != nil {
+		t.Errorf("ConfFromEnvStr test want no error, got: %v", err)
+	}
+	if !want.equal(got) {
+		t.Errorf("ConfFromEnvStr test want: %v, got: %v", want, got)
+	}
+}
+
 func TestGetCmdConf(t *testing.T) {
 	os.Setenv("MUTE_CONFIG", "fixtures/simple.toml")
 	defer os.Unsetenv("MUTE_CONFIG")
@@ -164,6 +218,7 @@ func TestGetCmdConf(t *testing.T) {
 	}
 }
 
+// createSimpleConf returns a Conf with simple criterions for testing
 func createSimpleConf() *Conf {
 	c1 := NewCriterion([]int{0}, []string{})
 	c2 := NewCriterion([]int{1, 2}, []string{"OK"})
