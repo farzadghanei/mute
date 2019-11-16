@@ -23,20 +23,38 @@ Usage
 has no arguments and can be configured with a file (in `TOML <https://github.com/toml-lang/toml>`_),
 and environment variables.
 
-The exit code of `mute` is the exit code of the command to execute.
-`mute` exits with 127 (`mute.exec.EXEC_ERR`) when failed to execute the commnad.
+Configuration is validated before running the program.
 
-
-Environment Variables
----------------------
-
-Environment variables override config file directives.
-
-  * `MUTE_CONFIG`: full/relative path to the config file. default is `/etc/mute.toml`, no file no issue.
+The exit code of `mute` is the exit code of the command it runs.
+However `mute` exits with 127 (`mute.ExitErrExec`) when failed to execute the commnad,
+and with 126 (`mute.ExitErrConf`) when configuration is invalid.
 
 
 Configuration
 -------------
+
+If the configuration file does not exist, or is not accessile (permissions, etc.)
+mute continues with the default configuration.
+Any accessible configuration should be valid otherwise mute exits with `mute.ExitErrConf`.
+
+
+Default Config
+==============
+When there is no config specified, mute suppresses output from successful runs, matching
+exit code 0 and any output pattern.
+
+
+Environment Variables
+=====================
+
+  * `MUTE_CONFIG`: full/relative path to the config file. default is `/etc/mute.toml`, no file no issue.
+    an empty value means no config file lookup.
+
+
+Configuration File
+===================
+
+The accessible configuration file should contain valid criteria defenitions in TOML format.
 
 
 .. code-block::
@@ -68,7 +86,6 @@ Configuration
       # Command specific settings can also be grouped with OR by repeating the settings
       [[ commands.user ]]
       stdout_patterns = ["^$"]  # now any command starting with "user" will match when output is empty regardless of exit code
-
 
 
 License
