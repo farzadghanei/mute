@@ -119,6 +119,42 @@ func TestDefaultConf(t *testing.T) {
 	}
 }
 
+func TestConfEqual(t *testing.T) {
+	crt := NewCriterion([]int{1, 2}, []string{"OK"})
+
+	empty1 := new(Conf)
+	empty2 := new(Conf)
+	simple1 := createSimpleConf()
+	simple2 := createSimpleConf()
+
+	cmd1 := createSimpleConf()
+	cmd1.Commands["/usr/local/bin/mute"] = Criteria{crt}
+
+	cmd2 := createSimpleConf()
+	cmd2.Commands["/usr/local/bin/mute"] = Criteria{crt}
+
+	if !empty1.equal(empty2) {
+		t.Errorf("Conf empty1 should be equal to empty2")
+	}
+
+	if !simple1.equal(simple2) {
+		t.Errorf("Conf simple should be equal to simple2")
+	}
+
+	if empty1.equal(simple1) {
+		t.Errorf("Conf empty should not be equal to simple")
+	}
+
+	if !cmd1.equal(cmd2) {
+		t.Errorf("Conf cmd1 should be equal to cmd2")
+	}
+
+	cmd2.Commands["test"] = Criteria{crt}
+	if cmd1.equal(cmd2) {
+		t.Errorf("Conf cmd1 should not be equal to cmd2 with extra command")
+	}
+}
+
 func TestReadConfFileError(t *testing.T) {
 	_, err := ReadConfFile("fixtures/no_such_file.toml")
 	if err == nil {
@@ -223,5 +259,6 @@ func createSimpleConf() *Conf {
 	c2 := NewCriterion([]int{1, 2}, []string{"OK"})
 	conf := new(Conf)
 	conf.Default.add(c1).add(c2)
+	conf.Commands = make(map[string]Criteria)
 	return conf
 }

@@ -175,8 +175,24 @@ func (c *Criteria) equal(c2 *Criteria) bool {
 
 // Conf.equal check if Conf items are the same
 func (c *Conf) equal(c2 *Conf) bool {
-	// @TODO: implement checking equality of commands criteria
-	return c.Default.equal(&(c2.Default))
+	var c1Crt, c2Crt Criteria
+	var cmd string
+	var ok bool
+	if !c.Default.equal(&(c2.Default)) {
+		return false
+	}
+	if len(c.Commands) != len(c2.Commands) {
+		return false
+	}
+	for cmd, c1Crt = range c.Commands {
+		if c2Crt, ok = c2.Commands[cmd]; !ok {
+			return false
+		}
+		if !c1Crt.equal(&c2Crt) {
+			return false
+		}
+	}
+	return true
 }
 
 // Conf.IsEmpty determines if the Conf is empty
