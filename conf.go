@@ -175,7 +175,13 @@ func (c *Criteria) equal(c2 *Criteria) bool {
 
 // Conf.equal check if Conf items are the same
 func (c *Conf) equal(c2 *Conf) bool {
+	// @TODO: implement checking equality of commands criteria
 	return c.Default.equal(&(c2.Default))
+}
+
+// Conf.IsEmpty determines if the Conf is empty
+func (c *Conf) IsEmpty() bool {
+	return len(c.Default) < 1 && len(c.Commands) < 1
 }
 
 func (e ConfAccessError) Error() string {

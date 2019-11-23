@@ -166,12 +166,11 @@ func TestConfFromEnvStr(t *testing.T) {
 	var err error
 	defaultConf = DefaultConf()
 
-	want = new(Conf)
 	got, err = ConfFromEnvStr("", "")
 	if err != nil {
 		t.Errorf("ConfFromEnvStr empty want no error, got: %v", err)
 	}
-	if !want.equal(got) {
+	if !got.IsEmpty() {
 		t.Errorf("ConfFromEnvStr want empty conf, got: %v", got)
 	}
 
