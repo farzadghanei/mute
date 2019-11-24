@@ -1,12 +1,24 @@
+// mute executes programs suppressing std streams if required
 package mute
 
 import (
+	"fmt"
 	"github.com/BurntSushi/toml"
 	"io/ioutil"
+	"os"
 	"regexp"
+	"strconv"
+	"strings"
 )
 
+// Version is the program version
 const Version string = "0.1.0"
+const ENV_CONFIG string = "MUTE_CONFIG"
+const ENV_EXIT_CODES string = "MUTE_EXIT_CODES"
+const ENV_STDOUT_PATTERN string = "MUTE_STDOUT_PATTERN"
+
+// ExitErrConf is exit code when config is invalid
+const ExitErrConf = 126
 
 // StdoutPattern hold regex pattern to match stdout with
 type StdoutPattern struct {
@@ -19,6 +31,11 @@ func (s *StdoutPattern) UnmarshalText(text []byte) error {
 	re, err := regexp.Compile(string(text))
 	s.Regexp = re
 	return err
+}
+
+// StdoutPattern.String return the regex pattern string
+func (s *StdoutPattern) String() string {
+	return s.Regexp.String()
 }
 
 // NewStdoutPattern returns a pointer to a StdoutPattern object using the regex pattern string
@@ -36,6 +53,18 @@ type Criterion struct {
 	StdoutPatterns []*StdoutPattern `toml:"stdout_patterns"`
 }
 
+// Criterion.String return a string desc to help debugging and inspecting data
+// This string is not guaranteed to be structured nor accurate
+func (c *Criterion) String() string {
+	var codes []string
+
+	for _, code := range c.ExitCodes {
+		codes = append(codes, strconv.Itoa(code))
+	}
+
+	return fmt.Sprintf("<Criterion codes=\"%s\" patterns_count=\"%d\">", strings.Join(codes, ","), len(c.StdoutPatterns))
+}
+
 // Criterion.IsEmpty checks if a Criterion is empty (no exit codes, no patterns)
 func (c *Criterion) IsEmpty() bool {
 	return len(c.ExitCodes) < 1 && len(c.StdoutPatterns) < 1
@@ -48,6 +77,12 @@ type Criteria []*Criterion
 type Conf struct {
 	Default  Criteria
 	Commands map[string]Criteria
+}
+
+// ConfAccessError represents errors when accessing to Config files
+type ConfAccessError struct {
+	err  error
+	Path string
 }
 
 // NewCriterion returns pointer to Criterion with specified exit codes and regex patterns from strings
@@ -143,17 +178,107 @@ func (c *Criteria) equal(c2 *Criteria) bool {
 
 // Conf.equal check if Conf items are the same
 func (c *Conf) equal(c2 *Conf) bool {
-	return c.Default.equal(&(c2.Default))
+	var c1Crt, c2Crt Criteria
+	var cmd string
+	var ok bool
+	if !c.Default.equal(&(c2.Default)) {
+		return false
+	}
+	if len(c.Commands) != len(c2.Commands) {
+		return false
+	}
+	for cmd, c1Crt = range c.Commands {
+		if c2Crt, ok = c2.Commands[cmd]; !ok {
+			return false
+		}
+		if !c1Crt.equal(&c2Crt) {
+			return false
+		}
+	}
+	return true
+}
+
+// Conf.IsEmpty determines if the Conf is empty
+func (c *Conf) IsEmpty() bool {
+	return len(c.Default) < 1 && len(c.Commands) < 1
+}
+
+func (e ConfAccessError) Error() string {
+	return e.err.Error()
 }
 
 // ReadConfFile reads config file and returns Conf
-func ReadConfFile(path string) (Conf, error) {
+func ReadConfFile(path string) (*Conf, error) {
 	var conf Conf
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
-		return conf, err
+		return &conf, ConfAccessError{err: err, Path: path}
 	}
 	contentStr := string(content)
 	_, err = toml.Decode(contentStr, &conf)
+	return &conf, err
+}
+
+// ConfFromEnvStr returns a Conf populated by strings as accepted environment variables
+// If the strings are empty, and empty Conf with no Criterion will be returned
+func ConfFromEnvStr(exitCodesStr, pattern string) (*Conf, error) {
+	var err error
+	var exitCodes []int
+	var stdp StdoutPattern
+	var reg *regexp.Regexp
+	criterion := new(Criterion)
+	conf := new(Conf)
+
+	if exitCodesStr != "" {
+		codeStrList := strings.Split(exitCodesStr, ",")
+		for _, s := range codeStrList {
+			i, err := strconv.Atoi(s)
+			if err != nil {
+				return conf, err
+			}
+			exitCodes = append(exitCodes, i)
+		}
+	}
+	criterion.ExitCodes = exitCodes
+
+	if pattern != "" {
+		if reg, err = regexp.Compile(pattern); err != nil {
+			return conf, err
+		}
+		stdp = StdoutPattern{Regexp: reg}
+		criterion.StdoutPatterns = []*StdoutPattern{&stdp}
+	}
+
+	if !criterion.IsEmpty() {
+		conf.Default.add(criterion)
+	}
+
+	return conf, err
+}
+
+// GetCmdConf returns the Conf that the mute cmd will use based on env vars
+func GetCmdConf() (*Conf, error) {
+	var conf *Conf
+	var err error
+
+	envExitCodes := os.Getenv(ENV_EXIT_CODES)
+	envPattern := os.Getenv(ENV_STDOUT_PATTERN)
+	conf, err = ConfFromEnvStr(envExitCodes, envPattern)
+
+	if err != nil || !conf.IsEmpty() {
+		return conf, err
+	}
+
+	confPath := "/etc/mute.toml"
+	envConfPath, envConfSet := os.LookupEnv(ENV_CONFIG)
+	if envConfSet {
+		confPath = envConfPath
+		if confPath == "" {
+			conf = DefaultConf()
+			return conf, err
+		}
+	}
+
+	conf, err = ReadConfFile(confPath)
 	return conf, err
 }
