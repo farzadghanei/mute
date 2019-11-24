@@ -13,6 +13,9 @@ import (
 
 // Version is the program version
 const Version string = "0.1.0"
+const ENV_CONFIG string = "MUTE_CONFIG"
+const ENV_EXIT_CODES string = "MUTE_EXIT_CODES"
+const ENV_STDOUT_PATTERN string = "MUTE_STDOUT_PATTERN"
 
 // ExitErrConf is exit code when config is invalid
 const ExitErrConf = 126
@@ -257,9 +260,17 @@ func ConfFromEnvStr(exitCodesStr, pattern string) (*Conf, error) {
 func GetCmdConf() (*Conf, error) {
 	var conf *Conf
 	var err error
-	confPath := "/etc/mute.toml"
 
-	envConfPath, envConfSet := os.LookupEnv("MUTE_CONFIG")
+	envExitCodes := os.Getenv(ENV_EXIT_CODES)
+	envPattern := os.Getenv(ENV_STDOUT_PATTERN)
+	conf, err = ConfFromEnvStr(envExitCodes, envPattern)
+
+	if err != nil || !conf.IsEmpty() {
+		return conf, err
+	}
+
+	confPath := "/etc/mute.toml"
+	envConfPath, envConfSet := os.LookupEnv(ENV_CONFIG)
 	if envConfSet {
 		confPath = envConfPath
 		if confPath == "" {
