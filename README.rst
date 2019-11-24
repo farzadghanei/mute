@@ -18,6 +18,9 @@ Usage
     mute bash -c "echo 'this is muted'"
     mute bash -c "echo 'this is printed, exiting with 12'; exit 12"
 
+    # configure mute with environment variables
+    env MUTE_EXIT_CODES="4,5" mute bash -c "echo 'muted'; exit 4"
+    env MUTE_STDOUT_PATTERN=".*OK.*" mute bash -c "echo 'warning but OK so muted'; exit 1"
 
 `mute` accepts a command with optional arguments to run. `mute` itself
 has no arguments and can be configured with a file (in `TOML <https://github.com/toml-lang/toml>`_),
@@ -33,9 +36,16 @@ and with 126 (`mute.ExitErrConf`) when configuration is invalid.
 Configuration
 -------------
 
+`mute` can be configured with environment variables, or with a configuration file.
+If the environment variables are set, they define the current configuration and
+the config file is not even checked. If no variables are defined or they are all empty,
+then the configuration file is checked.
+
 If the configuration file does not exist, or is not accessile (permissions, etc.)
 mute continues with the default configuration.
-Any accessible configuration should be valid otherwise mute exits with `mute.ExitErrConf`.
+
+Any accessible configuration should be valid otherwise mute exits with `mute.ExitErrConf` (
+also applies to environment variables).
 
 
 Default Config
@@ -47,10 +57,10 @@ exit code 0 and any output pattern.
 Environment Variables
 =====================
 
-  * `MUTE_CONFIG`: full/relative path to the config file. default is `/etc/mute.toml`, no file no issue.
-    an empty value means no config file lookup.
   * `MUTE_EXIT_CODES`: comma separated list of exit codes to suppress (same as `exit_codes` in `mute.default` config)
   * `MUTE_STDOUT_PATTERN`: regex pattern to suppress the output when stdout matches
+  * `MUTE_CONFIG`: full/relative path to the config file. default is `/etc/mute.toml`, no file no issue.
+    an empty value means no config file lookup.
 
 
 Configuration File
