@@ -2,6 +2,10 @@
 Mute
 ****
 
+.. image:: https://travis-ci.org/farzadghanei/mute.svg?branch=master
+    :target: https://travis-ci.org/farzadghanei/mute
+
+
 `mute` runs others programs while suppressing the output under configured
 conditions. A good use case is to keep cron jobs silenced and avoid receiving
 emails for known conditions.
