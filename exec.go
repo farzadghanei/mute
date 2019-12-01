@@ -20,17 +20,22 @@ type execContext struct {
 	Conf       *Conf
 }
 
-// Exec runs a command and prints the stdout only when the output matched the configuration
+// Exec runs a command muting the output when matched the configuration
 // executes a command, checks the exit codes and matches stdout with patterns,
-// and prints the stdout when the cmd spec matched. Return the exit code of cmd.
-func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer) (cmdExitCode int) {
+// and writes the stdout/sterr when configuration did not match.
+// Return the exit code of cmd, and an error if any
+func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer, errWriter io.Writer) (int, error) {
+	var cmdExitCode int
+	var err error
 	if cmd == "" {
 		panic("cmd is empty")
 	}
 	execCmd := exec.Command(cmd, args...)
 	var stdoutBuffer bytes.Buffer
+	var stderrBuffer bytes.Buffer
 	execCmd.Stdout = &stdoutBuffer
-	if err := execCmd.Run(); err != nil {
+	execCmd.Stderr = &stderrBuffer
+	if err = execCmd.Run(); err != nil {
 		switch e := err.(type) {
 		case *exec.ExitError:
 			cmdExitCode = e.ExitCode()
@@ -43,8 +48,9 @@ func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer) (cmdExitCo
 	crt := cmdCriteria(ctx.Cmd, ctx.Conf)
 	if !matchesCriteria(crt, ctx.ExitCode, ctx.StdoutText) {
 		fmt.Fprintf(outWriter, "%v", stdoutStr)
+		fmt.Fprintf(errWriter, "%v", stderrBuffer.String())
 	}
-	return cmdExitCode
+	return cmdExitCode, err
 }
 
 // matchesCriteria indicates if results of an exec matches a given Criteria
