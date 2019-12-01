@@ -6,7 +6,7 @@ Mute
     :target: https://travis-ci.org/farzadghanei/mute
 
 
-`mute` runs others programs while suppressing the output under configured
+`mute` runs others programs and prevents printing the output under configured
 conditions. A good use case is to keep cron jobs silenced and avoid receiving
 emails for known conditions.
 
@@ -14,7 +14,7 @@ It's written in Go, has a small resource overhead with no runtime dependencies.
 
 
 Usage
-=====
+-----
 
 .. code-block::
 
@@ -61,10 +61,11 @@ exit code 0 and any output pattern.
 Environment Variables
 =====================
 
-  * `MUTE_EXIT_CODES`: comma separated list of exit codes to suppress (same as `exit_codes` in `mute.default` config)
-  * `MUTE_STDOUT_PATTERN`: regex pattern to suppress the output when stdout matches
-  * `MUTE_CONFIG`: full/relative path to the config file. default is `/etc/mute.toml`, no file no issue.
-    an empty value means no config file lookup.
+
+ * `MUTE_EXIT_CODES`: comma separated list of exit codes to suppress (same as `exit_codes` in `mute.default` config)
+ * `MUTE_STDOUT_PATTERN`: regex pattern to suppress the output when stdout matches
+ * `MUTE_CONFIG`: full/relative path to the config file. default is `/etc/mute.toml`, no file no issue.
+   an empty value means no config file lookup.
 
 
 Configuration File
@@ -105,7 +106,7 @@ The accessible configuration file should contain valid criteria defenitions in T
 
 
 License
-=======
+-------
 
 `mute` is an open source project released under the terms of the MIT license.
 
