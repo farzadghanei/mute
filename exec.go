@@ -24,7 +24,7 @@ type execContext struct {
 // executes a command, checks the exit codes and matches stdout with patterns,
 // and writes the stdout/sterr when configuration did not match.
 // Return the exit code of cmd, and an error if any
-func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer) (int, error) {
+func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer, errWriter io.Writer) (int, error) {
 	var cmdExitCode int
 	var err error
 	if cmd == "" {
@@ -32,7 +32,9 @@ func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer) (int, erro
 	}
 	execCmd := exec.Command(cmd, args...)
 	var stdoutBuffer bytes.Buffer
+	var stderrBuffer bytes.Buffer
 	execCmd.Stdout = &stdoutBuffer
+	execCmd.Stderr = &stderrBuffer
 	if err = execCmd.Run(); err != nil {
 		switch e := err.(type) {
 		case *exec.ExitError:
@@ -46,6 +48,7 @@ func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer) (int, erro
 	crt := cmdCriteria(ctx.Cmd, ctx.Conf)
 	if !matchesCriteria(crt, ctx.ExitCode, ctx.StdoutText) {
 		fmt.Fprintf(outWriter, "%v", stdoutStr)
+		fmt.Fprintf(errWriter, "%v", stderrBuffer.String())
 	}
 	return cmdExitCode, err
 }

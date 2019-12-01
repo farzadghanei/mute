@@ -23,6 +23,6 @@ func main() {
 			os.Exit(mute.ExitErrConf)
 		}
 	}
-	exitCode, _ := mute.Exec(os.Args[1], os.Args[2:], conf, os.Stdout)
+	exitCode, _ := mute.Exec(os.Args[1], os.Args[2:], conf, os.Stdout, os.Stderr)
 	os.Exit(exitCode)
 }

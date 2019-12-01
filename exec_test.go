@@ -6,16 +6,49 @@ import (
 	"testing"
 )
 
-func TestExec(t *testing.T) {
-	conf := new(Conf)
-	var buf bytes.Buffer
-	var bufWriter = bufio.NewWriter(&buf)
-	got, err := Exec("go", []string{"version"}, conf, bufWriter)
+func TestExecMute(t *testing.T) {
+	conf := DefaultConf()
+	var outBuf bytes.Buffer
+	var errBuf bytes.Buffer
+	outWriter := bufio.NewWriter(&outBuf)
+	errWriter := bufio.NewWriter(&errBuf)
+	code, err := Exec("go", []string{"version"}, conf, outWriter, errWriter)
+	outWriter.Flush()
+	errWriter.Flush()
 	if err != nil {
 		t.Errorf("Exec returned error")
 	}
-	if got != 0 {
-		t.Errorf("Exec return val. got: %d want: 0", got)
+	if code != 0 {
+		t.Errorf("Exec return val. got: %d want: 0", code)
+	}
+	outStr := outBuf.String()
+	errStr := errBuf.String()
+	if outStr != "" {
+		t.Errorf("Exec mute should not print output. got: %v", outStr)
+	}
+	if errStr != "" {
+		t.Errorf("Exec mute should not print error. got: %v", errStr)
+	}
+}
+
+func TestExecNoMute(t *testing.T) {
+	conf := DefaultConf()
+	var outBuf bytes.Buffer
+	var errBuf bytes.Buffer
+	outWriter := bufio.NewWriter(&outBuf)
+	errWriter := bufio.NewWriter(&errBuf)
+	code, err := Exec("go", []string{"invalid"}, conf, outWriter, errWriter)
+	outWriter.Flush()
+	errWriter.Flush()
+	if err == nil {
+		t.Errorf("Exec invalid didn't return error")
+	}
+	if code == 0 {
+		t.Errorf("Exec invalid return val is 0")
+	}
+	errStr := errBuf.String()
+	if errStr == "" {
+		t.Errorf("Exec invalid should print error but didn't")
 	}
 }
 
