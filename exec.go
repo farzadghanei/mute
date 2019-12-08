@@ -5,8 +5,11 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
+	"os/signal"
 	"strings"
+	"syscall"
 )
 
 // ExitErrExec is exit code when failed to execute the command
@@ -25,16 +28,27 @@ type execContext struct {
 // and writes the stdout/sterr when configuration did not match.
 // Return the exit code of cmd, and an error if any
 func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer, errWriter io.Writer) (int, error) {
-	var cmdExitCode int
-	var err error
 	if cmd == "" {
 		panic("cmd is empty")
 	}
-	execCmd := exec.Command(cmd, args...)
+	var cmdExitCode int
+	var err error
 	var stdoutBuffer bytes.Buffer
 	var stderrBuffer bytes.Buffer
+	var sigs = make(chan os.Signal, 1)
+
+	execCmd := exec.Command(cmd, args...)
 	execCmd.Stdout = &stdoutBuffer
 	execCmd.Stderr = &stderrBuffer
+
+	go func() {
+		sig := <-sigs
+		if execCmd.Process != nil { // signal may arrive before cmd starts
+			execCmd.Process.Signal(sig)
+		}
+	}()
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
 	if err = execCmd.Run(); err != nil {
 		switch e := err.(type) {
 		case *exec.ExitError:
