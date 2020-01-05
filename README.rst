@@ -6,7 +6,7 @@ Mute
     :target: https://travis-ci.org/farzadghanei/mute
 
 
-`mute` runs others programs and prevents printing the output under configured
+`mute` runs other programs and prevents the output under configured
 conditions. A good use case is to keep cron jobs silenced and avoid receiving
 emails for known conditions.
 
@@ -27,10 +27,8 @@ Usage
     env MUTE_STDOUT_PATTERN=".*OK.*" mute bash -c "echo 'warning but OK so muted'; exit 1"
 
 `mute` accepts a command with optional arguments to run. `mute` itself
-has no arguments and can be configured with a file (in `TOML <https://github.com/toml-lang/toml>`_),
-and environment variables.
-
-Configuration is validated before running the program.
+has no arguments but can be configured with a file (in `TOML <https://github.com/toml-lang/toml>`_),
+and environment variables. The configuration is validated before running the program.
 
 The exit code of `mute` is the exit code of the command it runs.
 However `mute` exits with 127 (`mute.ExitErrExec`) when failed to execute the commnad,
@@ -41,20 +39,20 @@ Configuration
 -------------
 
 `mute` can be configured with environment variables, or with a configuration file.
-If the environment variables are set, they define the current configuration and
+If the environment variables are set, they define the behavior and
 the config file is not even checked. If no variables are defined or they are all empty,
-then the configuration file is checked.
+then the configuration file is used.
 
-If the configuration file does not exist, or is not accessile (permissions, etc.)
-mute continues with the default configuration.
+If the configuration file does not exist, or is not accessible (permissions, etc.)
+`mute` continues with the default configuration.
 
-Any accessible configuration should be valid otherwise mute exits with `mute.ExitErrConf` (
-also applies to environment variables).
+Any accessible configuration should be valid, otherwise `mute` exits with `mute.ExitErrConf`
+(also applies to environment variables).
 
 
 Default Config
 ==============
-When there is no config specified, mute suppresses output from successful runs, matching
+When there is no config specified, `mute` suppresses output from successful runs, matching
 exit code 0 and any output pattern.
 
 
@@ -62,7 +60,7 @@ Environment Variables
 =====================
 
 
- * `MUTE_EXIT_CODES`: comma separated list of exit codes to suppress (same as `exit_codes` in `mute.default` config)
+ * `MUTE_EXIT_CODES`: comma separated list of exit codes to mute (same as `exit_codes` in `mute.default` config)
  * `MUTE_STDOUT_PATTERN`: regex pattern to suppress the output when stdout matches
  * `MUTE_CONFIG`: full/relative path to the config file. default is `/etc/mute.toml`, no file no issue.
    an empty value means no config file lookup.
@@ -103,6 +101,7 @@ The accessible configuration file should contain valid criteria defenitions in T
       # Command specific settings can also be grouped with OR by repeating the settings
       [[ commands.user ]]
       stdout_patterns = ["^$"]  # now any command starting with "user" will match when output is empty regardless of exit code
+
 
 
 License
