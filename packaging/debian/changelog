@@ -1,0 +1,10 @@
+mute (0.1.0) UNRELEASED; urgency=low
+
+  [ Farzad Ghanei ]
+  * Handle signals (Closes: #4)
+  * Use environment variables to configure current run
+  * Use TOML format configuration file
+
+  [ Farzad Ghanei ]
+
+ -- Farzad Ghanei <farzad.ghanei@tutanota.com>  Sun, 05 Jan 2020 17:36:35 +0100
