@@ -22,6 +22,8 @@ export DEBUILD_LINTIAN_OPTS := "-i -I --show-overrides"
 export USENETWORK := yes
 export BUILD_HOME := /build
 
+cowbuilder = env DISTRIBUTION=$(DIST) ARCH=$(ARCH) BASEPATH=/var/cache/pbuilder/base-$(DIST)-$(ARCH).cow cowbuilder
+
 
 mute:
 	go build cmd/mute.go
@@ -48,26 +50,28 @@ clean:
 
 distclean: clean
 
-# requires a pbuilder environment. see pkg-deb-setup
 # override prefix so .deb package installs binaries to /usr/bin instead of /usr/local/bin
 pkg-deb: export prefix = /usr
+# requires a cowbuilder environment. see pkg-deb-setup
 pkg-deb:
 	(test ! -e debian && echo "no debian directory exists! creating one ..." && /bin/true) || (echo "debian directory exists. Remove to continue. aborting!" && /bin/false)
 	# @TODO: find the package version
 	tar --exclude-vcs -zcf ../mute_0.1.0.orig.tar.gz .
 	cp -r packaging/debian debian
-	pdebuild
+	DIST=$(DIST) ARCH=$(ARCH) BUILDER=cowbuilder git-pbuilder
 
 # required:
-# sudo apt-get install build-essential git-pbuilder devscripts ubuntu-dev-tools
+# sudo apt-get install sudo build-essential git-pbuilder devscripts ubuntu-dev-tools
 # set these options set on ~/.pbuildrc (@TODO: set the variables during the build process)
 # USENETWORK=yes
 # BUILD_HOME=$BUILDDIR
+# COMPONENTS="main universe"
+# EXTRAPACKAGES="cowdancer software-properties-common"
 pkg-deb-setup:
-	echo "creating a pbuilder environment with latest go version ..."
-	sudo pbuilder create
-	echo "apt-get update; apt-get install -yq software-properties-common;" | sudo pbuilder --login --save-after-login
-	echo "add-apt-repository ppa:longsleep/golang-backports; apt-get update; apt-get -yq install golang" | sudo pbuilder --login --save-after-login
+	echo "creating a git-pbuilder environment with latest go version ..."
+	DIST=$(DIST) ARCH=$(ARCH) git-pbuilder create
+	echo "apt-get update; apt-get install -yq software-properties-common;" | sudo $(cowbuilder) --login --save-after-login
+	echo "add-apt-repository ppa:longsleep/golang-backports; apt-get update; apt-get -yq install golang" | sudo $(cowbuilder) --login --save-after-login
 
 pkg-clean:
 	rm -rf debian
