@@ -1,6 +1,8 @@
 #!/bin/env make -f
 
 SHELL = /bin/sh
+makefile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
+makefile_dir := $(dir $(makefile_path))
 
 # installation
 DESTDIR ?=
@@ -14,14 +16,13 @@ INSTALL_PROGRAM ?= $(INSTALL)
 INSTALL_DATA ?= $(INSTALL -m 644)
 
 # packaging
-export ARCH := amd64
-export DIST := xenial
-export AUTO_DEBSIGN := no
-export DEBUILD_DPKG_BUILDPACKAGE_OPTS := "-us -uc -I -i"
-export DEBUILD_LINTIAN_OPTS := "-i -I --show-overrides"
-export USENETWORK := yes
-export BUILD_HOME := /build
+PBUILDER_COMPONENTS ?= "main universe"
+PBUILDER_RC ?= $(makefile_dir)/packaging/pbuilderrc
 
+export ARCH ?= amd64
+export DIST ?= xenial
+
+# command aliases
 cowbuilder = env DISTRIBUTION=$(DIST) ARCH=$(ARCH) BASEPATH=/var/cache/pbuilder/base-$(DIST)-$(ARCH).cow cowbuilder
 
 
@@ -58,20 +59,15 @@ pkg-deb:
 	# @TODO: find the package version
 	tar --exclude-vcs -zcf ../mute_0.1.0.orig.tar.gz .
 	cp -r packaging/debian debian
-	DIST=$(DIST) ARCH=$(ARCH) BUILDER=cowbuilder git-pbuilder
+	DIST=$(DIST) ARCH=$(ARCH) BUILDER=cowbuilder GIT_PBUILDER_OPTIONS="--configfile=$(PBUILDER_RC)" git-pbuilder
 
 # required:
 # sudo apt-get install sudo build-essential git-pbuilder devscripts ubuntu-dev-tools
-# set these options set on ~/.pbuildrc (@TODO: set the variables during the build process)
-# USENETWORK=yes
-# BUILD_HOME=$BUILDDIR
-# COMPONENTS="main universe"
-# EXTRAPACKAGES="cowdancer software-properties-common"
 pkg-deb-setup:
 	echo "creating a git-pbuilder environment with latest go version ..."
-	DIST=$(DIST) ARCH=$(ARCH) git-pbuilder create
+	DIST=$(DIST) ARCH=$(ARCH) git-pbuilder create --components=$(PBUILDER_COMPONENTS) --extrapackages="cowdancer" --configfile=$(PBUILDER_RC)
 	echo "apt-get update; apt-get install -yq software-properties-common;" | sudo $(cowbuilder) --login --save-after-login
-	echo "add-apt-repository ppa:longsleep/golang-backports; apt-get update; apt-get -yq install golang" | sudo $(cowbuilder) --login --save-after-login
+	echo "add-apt-repository ppa:longsleep/golang-backports; apt-get update;" | sudo $(cowbuilder) --login --save-after-login
 
 pkg-clean:
 	rm -rf debian
