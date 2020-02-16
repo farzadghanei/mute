@@ -107,7 +107,7 @@ The accessible configuration file should contain valid criteria defenitions in T
 License
 -------
 
-`mute` is an open source project released under the terms of the MIT license.
+`mute` is an open source project released under the terms of the `MIT license <https://opensource.org/licenses/MIT>`_.
 
 The MIT License (MIT)
 
