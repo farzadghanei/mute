@@ -62,7 +62,7 @@ Environment Variables
 
  * `MUTE_EXIT_CODES`: comma separated list of exit codes to mute (same as `exit_codes` in `mute.default` config)
  * `MUTE_STDOUT_PATTERN`: regex pattern to suppress the output when stdout matches
- * `MUTE_CONFIG`: full/relative path to the config file. default is `/etc/mute.toml`, no file no issue.
+ * `MUTE_CONFIG`: absolute/relative path to the config file. default is `/etc/mute.toml`, no file no issue.
    an empty value means no config file lookup.
 
 
