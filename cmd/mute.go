@@ -1,4 +1,5 @@
 // mute executes programs suppressing std streams if required
+// license: MIT, see LICENSE for details.
 package main
 
 import (
