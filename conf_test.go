@@ -1,3 +1,4 @@
+// license: MIT, see LICENSE for details.
 package mute
 
 import (

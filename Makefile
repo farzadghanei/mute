@@ -1,4 +1,5 @@
 #!/bin/env make -f
+# license: MIT, see LICENSE for details.
 
 SHELL = /bin/sh
 makefile_path := $(abspath $(lastword $(MAKEFILE_LIST)))

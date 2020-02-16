@@ -1,4 +1,6 @@
 // mute executes programs suppressing std streams if required
+// license: MIT, see LICENSE for details.
+// BurntSushi/toml module uses MIT license. see LICENSE for more details
 package mute
 
 import (
