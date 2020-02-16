@@ -72,6 +72,9 @@ pkg-deb-setup:
 pkg-clean:
 	rm -rf debian
 
+# required: python docutils
+docs:
+	rst2man.py --input-encoding=utf8 --output-encoding=utf8 --strict docs/man/mute.rst docs/man/mute.1
 
 .DEFAULT_GOAL := build
-.PHONY: test build install pkg-deb pkg-clean pkg-deb-setup
+.PHONY: test build install pkg-deb pkg-clean pkg-deb-setup docs
