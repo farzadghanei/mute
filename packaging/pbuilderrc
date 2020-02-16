@@ -1,0 +1,19 @@
+# configurations for pbuilder/cowbuilder
+# can be set via ~/.pbuilderrc
+
+# by defualt don't sign the deb package
+AUTO_DEBSIGN=${AUTO_DEBSIGN:-no}
+
+HOOKDIR=${HOOKDIR:-/var/cache/pbuilder/hooks}
+
+# apt repository components
+COMPONENTS=${COMPONENTS:-"main universe"}
+
+# enable networking in pbuilder env so go can download package dependencies
+USENETWORK=yes
+
+# set $HOME var to $BUILDDIR so commands that need $HOME env var would work
+BUILD_HOME=$BUILDDIR
+
+# set debbuild opts so dpkg-buildpackage skips signing packages
+DEBBUILDOPTS=${DEBBUILDOPTS:-"-us -uc -I -i"}

@@ -1,0 +1,11 @@
+Source: mute
+Maintainer: Farzad Ghanei <farzad.ghanei@tutanota.com>
+Section: misc
+Priority: optional
+Standards-Version: 3.9.2
+Build-Depends: debhelper (>= 9), golang-go (>=1.13)
+
+Package: mute
+Architecture: amd64
+Description: mute programs
+ Run other programs muting the output when configured
