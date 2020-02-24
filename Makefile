@@ -37,6 +37,14 @@ build: mute
 test:
 	go test github.com/farzadghanei/mute
 
+test-build: build
+	./mute fixtures/xecho -c 3 > /dev/null; (test "$$?" -eq 3 || false)
+	./mute fixtures/xecho -c 1 'not muted' | grep -q 'not muted'
+	output=$$(env MUTE_EXIT_CODES=1 ./mute fixtures/xecho -c 1 'muted'); test -z "$$output"
+	env MUTE_EXIT_CODDE=1 ./mute fixtures/xecho -c 2 'not muted' | grep -q 'not muted'
+	output=$$(env MUTE_STDOUT_PATTERN='mute.+' ./mute fixtures/xecho 'will be muted.'); test -z "$$output"
+	env MUTE_STDOUT_PATTERN='nottoday' ./mute fixtures/xecho 'not muted' | grep -q 'not muted'
+
 
 install: build
 	$(INSTALL_PROGRAM) -d $(DESTDIR)$(bindir)
@@ -78,4 +86,4 @@ docs:
 	rst2man.py --input-encoding=utf8 --output-encoding=utf8 --strict docs/man/mute.rst docs/man/mute.1
 
 .DEFAULT_GOAL := build
-.PHONY: test build install pkg-deb pkg-clean pkg-deb-setup docs
+.PHONY: test build test-build install pkg-deb pkg-clean pkg-deb-setup docs
