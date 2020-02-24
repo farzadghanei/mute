@@ -20,6 +20,10 @@ INSTALL_DATA ?= $(INSTALL -m 644)
 PBUILDER_COMPONENTS ?= "main universe"
 PBUILDER_RC ?= $(makefile_dir)/packaging/pbuilderrc
 
+# find Debian package version from the changelog file. latest version
+# should be at the top, first matching 'mute (0.1.0) ...' and sed clears chars not in version
+MUTE_DEB_VERSION := $(shell grep --only-matching --max-count 1 --perl-regexp "^\s*mute\s+\(.+\)\s*" packaging/debian/changelog | sed 's/[^0-9.]//g')
+
 export ARCH ?= amd64
 export DIST ?= xenial
 
@@ -65,8 +69,7 @@ pkg-deb: export prefix = /usr
 # requires a cowbuilder environment. see pkg-deb-setup
 pkg-deb:
 	(test ! -e debian && echo "no debian directory exists! creating one ..." && /bin/true) || (echo "debian directory exists. Remove to continue. aborting!" && /bin/false)
-	# @TODO: find the package version
-	tar --exclude-vcs -zcf ../mute_0.1.0.orig.tar.gz .
+	tar --exclude-vcs -zcf ../mute_$(MUTE_DEB_VERSION).orig.tar.gz .
 	cp -r packaging/debian debian
 	DIST=$(DIST) ARCH=$(ARCH) BUILDER=cowbuilder GIT_PBUILDER_OPTIONS="--configfile=$(PBUILDER_RC)" git-pbuilder
 
