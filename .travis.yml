@@ -6,6 +6,7 @@ go:
 script:
   - make test
   - make
+  - make test-build
 
 notifications:
   email: false
