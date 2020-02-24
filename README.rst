@@ -6,7 +6,7 @@ Mute
     :target: https://travis-ci.org/farzadghanei/mute
 
 
-`mute` runs other programs and prevents the output under configured
+`mute` runs other programs and mutes the output under configured
 conditions. A good use case is to keep cron jobs silenced and avoid receiving
 emails for known conditions.
 
@@ -28,7 +28,7 @@ Usage
 
 `mute` accepts a command with optional arguments to run. `mute` itself
 has no arguments but can be configured with a file (in `TOML <https://github.com/toml-lang/toml>`_),
-and environment variables. The configuration is validated before running the program.
+and environment variables. The configuration is validated before running the command.
 
 The exit code of `mute` is the exit code of the command it runs.
 However `mute` exits with 127 (`mute.ExitErrExec`) when failed to execute the commnad,
@@ -60,9 +60,9 @@ Environment Variables
 =====================
 
 
- * `MUTE_EXIT_CODES`: comma separated list of exit codes to mute (same as `exit_codes` in `mute.default` config)
- * `MUTE_STDOUT_PATTERN`: regex pattern to suppress the output when stdout matches
- * `MUTE_CONFIG`: absolute/relative path to the config file. default is `/etc/mute.toml`, no file no issue.
+* `MUTE_EXIT_CODES`: comma separated list of exit codes to mute (same as `exit_codes` in `mute.default` config)
+* `MUTE_STDOUT_PATTERN`: regex pattern to suppress the output when stdout matches
+* `MUTE_CONFIG`: absolute/relative path to the config file. default is `/etc/mute.toml`, no file no issue.
    an empty value means no config file lookup.
 
 
@@ -108,25 +108,4 @@ License
 -------
 
 `mute` is an open source project released under the terms of the `MIT license <https://opensource.org/licenses/MIT>`_.
-
-The MIT License (MIT)
-
-Copyright (c) 2019 Farzad Ghanei
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+See LICENSE file for more details.
