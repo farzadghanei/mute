@@ -4,6 +4,13 @@
 SHELL = /bin/sh
 makefile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 makefile_dir := $(dir $(makefile_path))
+MUTE_LATEST_TAG := $(shell git tag --list | grep --only-matching --line-regexp --perl-regexp '\d+\.\d+\.\d+' | uniq | sort -V | tail -n 1)
+
+# build
+OS ?= linux
+ARCH ?= amd64
+DIST ?= xenial
+LDFLAGS ?= ""
 
 # installation
 DESTDIR ?=
@@ -16,7 +23,9 @@ INSTALL ?= install
 INSTALL_PROGRAM ?= $(INSTALL)
 INSTALL_DATA ?= $(INSTALL -m 644)
 
+
 # packaging
+PKG_TGZ_NAME = mute-$(MUTE_LATEST_TAG)-$(OS)-$(ARCH).tar.gz
 PBUILDER_COMPONENTS ?= "main universe"
 PBUILDER_RC ?= $(makefile_dir)/packaging/pbuilderrc
 
@@ -24,15 +33,13 @@ PBUILDER_RC ?= $(makefile_dir)/packaging/pbuilderrc
 # should be at the top, first matching 'mute (0.1.0) ...' and sed clears chars not in version
 MUTE_DEB_VERSION := $(shell grep --only-matching --max-count 1 --perl-regexp "^\s*mute\s+\(.+\)\s*" packaging/debian/changelog | sed 's/[^0-9.]//g')
 
-export ARCH ?= amd64
-export DIST ?= xenial
 
 # command aliases
 cowbuilder = env DISTRIBUTION=$(DIST) ARCH=$(ARCH) BASEPATH=/var/cache/pbuilder/base-$(DIST)-$(ARCH).cow cowbuilder
 
 
 mute:
-	go build cmd/mute.go
+	GOOS=$(OS) GOARCH=$(ARCH) go build -ldflags $(LDFLAGS) cmd/mute.go
 
 
 build: mute
@@ -81,12 +88,16 @@ pkg-deb-setup:
 	echo "apt-get update; apt-get install -yq software-properties-common;" | sudo $(cowbuilder) --login --save-after-login
 	echo "add-apt-repository ppa:longsleep/golang-backports; apt-get update;" | sudo $(cowbuilder) --login --save-after-login
 
+pkg-tgz: build
+	tar --create --gzip --exclude-vcs --exclude=docs/man/*.rst --file $(PKG_TGZ_NAME) mute README.rst LICENSE docs/man/mute.1
+
 pkg-clean:
 	rm -rf debian
+	rm -f $(PKG_TGZ_NAME)
 
 # required: python docutils
 docs:
 	rst2man.py --input-encoding=utf8 --output-encoding=utf8 --strict docs/man/mute.rst docs/man/mute.1
 
 .DEFAULT_GOAL := build
-.PHONY: test build test-build install pkg-deb pkg-clean pkg-deb-setup docs
+.PHONY: test build test-build install pkg-deb pkg-clean pkg-deb-setup pkg-tgz docs
