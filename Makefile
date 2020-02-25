@@ -10,7 +10,7 @@ MUTE_LATEST_TAG := $(shell git tag --list | grep --only-matching --line-regexp -
 OS ?= linux
 ARCH ?= amd64
 DIST ?= xenial
-LDFLAGS ?= ""
+LDFLAGS ?= "-s"  # by default create a leaner binary
 
 # installation
 DESTDIR ?=
