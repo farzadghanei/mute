@@ -11,6 +11,13 @@ OS ?= linux
 ARCH ?= amd64
 DIST ?= xenial
 LDFLAGS ?= "-s"  # by default create a leaner binary
+GOARCH ?= amd64
+
+ifeq ($(ARCH), amd64)
+    GOARCH = amd64
+else ifeq ($(ARCH), i368)
+    GOARCH = 386
+endif
 
 # installation
 DESTDIR ?=
@@ -39,7 +46,7 @@ cowbuilder = env DISTRIBUTION=$(DIST) ARCH=$(ARCH) BASEPATH=/var/cache/pbuilder/
 
 
 mute:
-	GOOS=$(OS) GOARCH=$(ARCH) go build -ldflags $(LDFLAGS) cmd/mute.go
+	GOOS=$(OS) GOARCH=$(GOARCH) go build -ldflags $(LDFLAGS) cmd/mute.go
 
 
 build: mute
