@@ -4,6 +4,20 @@
 SHELL = /bin/sh
 makefile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 makefile_dir := $(dir $(makefile_path))
+MUTE_LATEST_TAG := $(shell git tag --list | grep --only-matching --line-regexp --perl-regexp '\d+\.\d+\.\d+' | uniq | sort -V | tail -n 1)
+
+# build
+OS ?= linux
+ARCH ?= amd64
+DIST ?= xenial
+GOLDFLAGS ?= "-s"  # by default create a leaner binary
+GOARCH ?= amd64
+
+ifeq ($(ARCH), amd64)
+    GOARCH = amd64
+else ifeq ($(ARCH), i368)
+    GOARCH = 386
+endif
 
 # installation
 DESTDIR ?=
@@ -16,19 +30,24 @@ INSTALL ?= install
 INSTALL_PROGRAM ?= $(INSTALL)
 INSTALL_DATA ?= $(INSTALL -m 644)
 
+
 # packaging
+PKG_DIST_DIR ?= $(abspath $(makefile_dir)/..)
+PKG_TGZ_NAME = mute-$(MUTE_LATEST_TAG)-$(OS)-$(ARCH).tar.gz
 PBUILDER_COMPONENTS ?= "main universe"
 PBUILDER_RC ?= $(makefile_dir)/packaging/pbuilderrc
 
-export ARCH ?= amd64
-export DIST ?= xenial
+# find Debian package version from the changelog file. latest version
+# should be at the top, first matching 'mute (0.1.0) ...' and sed clears chars not in version
+MUTE_DEB_VERSION := $(shell grep --only-matching --max-count 1 --perl-regexp "^\s*mute\s+\(.+\)\s*" packaging/debian/changelog | sed 's/[^0-9.]//g')
+
 
 # command aliases
 cowbuilder = env DISTRIBUTION=$(DIST) ARCH=$(ARCH) BASEPATH=/var/cache/pbuilder/base-$(DIST)-$(ARCH).cow cowbuilder
 
 
 mute:
-	go build cmd/mute.go
+	GOOS=$(OS) GOARCH=$(GOARCH) go build -ldflags $(GOLDFLAGS) cmd/mute.go
 
 
 build: mute
@@ -65,10 +84,9 @@ pkg-deb: export prefix = /usr
 # requires a cowbuilder environment. see pkg-deb-setup
 pkg-deb:
 	(test ! -e debian && echo "no debian directory exists! creating one ..." && /bin/true) || (echo "debian directory exists. Remove to continue. aborting!" && /bin/false)
-	# @TODO: find the package version
-	tar --exclude-vcs -zcf ../mute_0.1.0.orig.tar.gz .
+	tar --exclude-vcs -zcf ../mute_$(MUTE_DEB_VERSION).orig.tar.gz .
 	cp -r packaging/debian debian
-	DIST=$(DIST) ARCH=$(ARCH) BUILDER=cowbuilder GIT_PBUILDER_OPTIONS="--configfile=$(PBUILDER_RC)" git-pbuilder
+	env PKG_DIST_DIR=$(PKG_DIST_DIR) DIST=$(DIST) ARCH=$(ARCH) BUILDER=cowbuilder GIT_PBUILDER_OPTIONS="--configfile=$(PBUILDER_RC)" BUILDRESULT=$(PKG_DIST_DIR) git-pbuilder
 
 # required:
 # sudo apt-get install sudo build-essential git-pbuilder devscripts ubuntu-dev-tools
@@ -78,12 +96,16 @@ pkg-deb-setup:
 	echo "apt-get update; apt-get install -yq software-properties-common;" | sudo $(cowbuilder) --login --save-after-login
 	echo "add-apt-repository ppa:longsleep/golang-backports; apt-get update;" | sudo $(cowbuilder) --login --save-after-login
 
+pkg-tgz: build
+	tar --create --gzip --exclude-vcs --exclude=docs/man/*.rst --file $(PKG_DIST_DIR)/$(PKG_TGZ_NAME) mute README.rst LICENSE docs/man/mute.1
+
 pkg-clean:
 	rm -rf debian
+	rm -f $(PKG_TGZ_NAME)
 
 # required: python docutils
 docs:
 	rst2man.py --input-encoding=utf8 --output-encoding=utf8 --strict docs/man/mute.rst docs/man/mute.1
 
 .DEFAULT_GOAL := build
-.PHONY: test build test-build install pkg-deb pkg-clean pkg-deb-setup docs
+.PHONY: test build test-build install pkg-deb pkg-clean pkg-deb-setup pkg-tgz docs

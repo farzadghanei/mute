@@ -6,6 +6,9 @@ AUTO_DEBSIGN=${AUTO_DEBSIGN:-no}
 
 HOOKDIR=${HOOKDIR:-/var/cache/pbuilder/hooks}
 
+# configure where to place the built packages
+BUILDRESULT=${PKG_DIST_DIR:-../}
+
 # apt repository components
 COMPONENTS=${COMPONENTS:-"main universe"}
 
