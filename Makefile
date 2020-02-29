@@ -10,7 +10,7 @@ MUTE_LATEST_TAG := $(shell git tag --list | grep --only-matching --line-regexp -
 OS ?= linux
 ARCH ?= amd64
 DIST ?= xenial
-LDFLAGS ?= "-s"  # by default create a leaner binary
+GOLDFLAGS ?= "-s"  # by default create a leaner binary
 GOARCH ?= amd64
 
 ifeq ($(ARCH), amd64)
@@ -46,7 +46,7 @@ cowbuilder = env DISTRIBUTION=$(DIST) ARCH=$(ARCH) BASEPATH=/var/cache/pbuilder/
 
 
 mute:
-	GOOS=$(OS) GOARCH=$(GOARCH) go build -ldflags $(LDFLAGS) cmd/mute.go
+	GOOS=$(OS) GOARCH=$(GOARCH) go build -ldflags $(GOLDFLAGS) cmd/mute.go
 
 
 build: mute
