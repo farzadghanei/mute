@@ -32,6 +32,7 @@ INSTALL_DATA ?= $(INSTALL -m 644)
 
 
 # packaging
+PKG_DIST_DIR ?= $(abspath $(makefile_dir)/..)
 PKG_TGZ_NAME = mute-$(MUTE_LATEST_TAG)-$(OS)-$(ARCH).tar.gz
 PBUILDER_COMPONENTS ?= "main universe"
 PBUILDER_RC ?= $(makefile_dir)/packaging/pbuilderrc
@@ -85,7 +86,7 @@ pkg-deb:
 	(test ! -e debian && echo "no debian directory exists! creating one ..." && /bin/true) || (echo "debian directory exists. Remove to continue. aborting!" && /bin/false)
 	tar --exclude-vcs -zcf ../mute_$(MUTE_DEB_VERSION).orig.tar.gz .
 	cp -r packaging/debian debian
-	DIST=$(DIST) ARCH=$(ARCH) BUILDER=cowbuilder GIT_PBUILDER_OPTIONS="--configfile=$(PBUILDER_RC)" git-pbuilder
+	env PKG_DIST_DIR=$(PKG_DIST_DIR) DIST=$(DIST) ARCH=$(ARCH) BUILDER=cowbuilder GIT_PBUILDER_OPTIONS="--configfile=$(PBUILDER_RC)" BUILDRESULT=$(PKG_DIST_DIR) git-pbuilder
 
 # required:
 # sudo apt-get install sudo build-essential git-pbuilder devscripts ubuntu-dev-tools
@@ -96,7 +97,7 @@ pkg-deb-setup:
 	echo "add-apt-repository ppa:longsleep/golang-backports; apt-get update;" | sudo $(cowbuilder) --login --save-after-login
 
 pkg-tgz: build
-	tar --create --gzip --exclude-vcs --exclude=docs/man/*.rst --file $(PKG_TGZ_NAME) mute README.rst LICENSE docs/man/mute.1
+	tar --create --gzip --exclude-vcs --exclude=docs/man/*.rst --file $(PKG_DIST_DIR)/$(PKG_TGZ_NAME) mute README.rst LICENSE docs/man/mute.1
 
 pkg-clean:
 	rm -rf debian
