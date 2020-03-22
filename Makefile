@@ -89,7 +89,7 @@ pkg-deb:
 	env PKG_DIST_DIR=$(PKG_DIST_DIR) DIST=$(DIST) ARCH=$(ARCH) BUILDER=cowbuilder GIT_PBUILDER_OPTIONS="--configfile=$(PBUILDER_RC)" BUILDRESULT=$(PKG_DIST_DIR) git-pbuilder
 
 # required:
-# sudo apt-get install sudo build-essential git-pbuilder devscripts ubuntu-dev-tools
+# sudo apt-get install build-essential debhelper pbuilder fakeroot cowbuilder git-buildpackage devscripts ubuntu-dev-tools
 pkg-deb-setup:
 	echo "creating a git-pbuilder environment with latest go version ..."
 	DIST=$(DIST) ARCH=$(ARCH) git-pbuilder create --components=$(PBUILDER_COMPONENTS) --extrapackages="cowdancer" --configfile=$(PBUILDER_RC)
