@@ -32,6 +32,7 @@ cp -a docs/man/mute.1 $RPM_BUILD_ROOT/usr/share/man/man1/%{name}.1
 
 %files
 %license LICENSE
+%doc README.rst
 %{_bindir}/%{name}
 %{_mandir}/man1/%{name}*
 
