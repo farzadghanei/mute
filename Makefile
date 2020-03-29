@@ -36,11 +36,15 @@ PKG_DIST_DIR ?= $(abspath $(makefile_dir)/..)
 PKG_TGZ_NAME = mute-$(MUTE_LATEST_TAG)-$(OS)-$(ARCH).tar.gz
 PBUILDER_COMPONENTS ?= "main universe"
 PBUILDER_RC ?= $(makefile_dir)/packaging/pbuilderrc
+RPM_DEV_TREE ?= $(HOME)/rpmbuild
 
 # find Debian package version from the changelog file. latest version
 # should be at the top, first matching 'mute (0.1.0) ...' and sed clears chars not in version
 MUTE_DEB_VERSION := $(shell grep --only-matching --max-count 1 --perl-regexp "^\s*mute\s+\(.+\)\s*" packaging/debian/changelog | sed 's/[^0-9.]//g')
 
+# find rpm version from the spec file. latest version
+# should be in the top tags, first matching 'Version: 0.1.0' and sed clears chars not in version
+MUTE_RPM_VERSION := $(shell grep --only-matching --max-count 1 --line-regexp --perl-regexp "\s*Version\:\s*.+\s*" packaging/mute.spec | sed 's/[^0-9.]//g')
 
 # command aliases
 cowbuilder = env DISTRIBUTION=$(DIST) ARCH=$(ARCH) BASEPATH=/var/cache/pbuilder/base-$(DIST)-$(ARCH).cow cowbuilder
@@ -98,6 +102,16 @@ pkg-deb-setup:
 
 pkg-tgz: build
 	tar --create --gzip --exclude-vcs --exclude=docs/man/*.rst --file $(PKG_DIST_DIR)/$(PKG_TGZ_NAME) mute README.rst LICENSE docs/man/mute.1
+
+# override prefix so .rpm package installs binaries to /usr/bin instead of /usr/local/bin
+pkg-rpm: export prefix = /usr
+# requires golang compiler > 1.13, and rpmdevtools package
+pkg-rpm:
+	(go version | grep -q go1.1[3-9]) || (echo "please install Go lang tools > 1.13. aborting!" && /bin/false)
+	tar --exclude-vcs -zcf $(RPM_DEV_TREE)/SOURCES/mute-$(MUTE_RPM_VERSION).tar.gz .
+	cp packaging/mute.spec $(RPM_DEV_TREE)/SPECS/mute-$(MUTE_RPM_VERSION).spec
+	rpmbuild -bs $(RPM_DEV_TREE)/SPECS/mute-$(MUTE_RPM_VERSION).spec
+	rpmbuild --rebuild $(RPM_DEV_TREE)/SRPMS/mute-$(MUTE_RPM_VERSION)*.src.rpm
 
 pkg-clean:
 	rm -rf debian
