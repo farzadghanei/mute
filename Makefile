@@ -39,8 +39,9 @@ PBUILDER_RC ?= $(makefile_dir)/packaging/pbuilderrc
 RPM_DEV_TREE ?= $(HOME)/rpmbuild
 
 # find Debian package version from the changelog file. latest version
-# should be at the top, first matching 'mute (0.1.0) ...' and sed clears chars not in version
-MUTE_DEB_VERSION := $(shell grep --only-matching --max-count 1 --perl-regexp "^\s*mute\s+\(.+\)\s*" packaging/debian/changelog | sed 's/[^0-9.]//g')
+# should be at the top, first matching 'mute (0.1.0-1) ...' and sed clears chars not in version
+MUTE_DEB_VERSION := $(shell grep --only-matching --max-count 1 --perl-regexp "^\s*mute\s+\(.+\)\s*" packaging/debian/changelog | sed 's/[^0-9.-]//g')
+MUTE_DEB_UPSTREAM_VERSION := $(shell echo $(MUTE_DEB_VERSION) | grep --only-matching --perl-regexp '^[0-9.]+')
 
 # find rpm version from the spec file. latest version
 # should be in the top tags, first matching 'Version: 0.1.0' and sed clears chars not in version
@@ -88,7 +89,7 @@ pkg-deb: export prefix = /usr
 # requires a cowbuilder environment. see pkg-deb-setup
 pkg-deb:
 	(test ! -e debian && echo "no debian directory exists! creating one ..." && /bin/true) || (echo "debian directory exists. Remove to continue. aborting!" && /bin/false)
-	tar --exclude-vcs -zcf ../mute_$(MUTE_DEB_VERSION).orig.tar.gz .
+	tar --exclude-vcs -zcf ../mute_$(MUTE_DEB_UPSTREAM_VERSION).orig.tar.gz .
 	cp -r packaging/debian debian
 	env PKG_DIST_DIR=$(PKG_DIST_DIR) DIST=$(DIST) ARCH=$(ARCH) BUILDER=cowbuilder GIT_PBUILDER_OPTIONS="--configfile=$(PBUILDER_RC)" BUILDRESULT=$(PKG_DIST_DIR) git-pbuilder
 
