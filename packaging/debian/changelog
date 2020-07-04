@@ -1,4 +1,4 @@
-mute (0.1.0) UNRELEASED; urgency=low
+mute (0.1.0-1) UNRELEASED; urgency=low
 
   [ Farzad Ghanei ]
   * Handle signals (Closes: #4)
