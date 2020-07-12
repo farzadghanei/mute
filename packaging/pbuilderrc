@@ -4,8 +4,6 @@
 # by defualt don't sign the deb package
 AUTO_DEBSIGN=${AUTO_DEBSIGN:-no}
 
-HOOKDIR=${HOOKDIR:-/var/cache/pbuilder/hooks}
-
 # configure where to place the built packages
 BUILDRESULT=${PKG_DIST_DIR:-../}
 

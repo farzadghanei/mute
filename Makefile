@@ -5,6 +5,7 @@ SHELL = /bin/sh
 makefile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 makefile_dir := $(dir $(makefile_path))
 MUTE_LATEST_TAG := $(shell git tag --list | grep --only-matching --line-regexp --perl-regexp '\d+\.\d+\.\d+' | uniq | sort -V | tail -n 1)
+TIMESTAMP_MINUTE := $(shell date -u +%Y%m%d%H%m)
 
 # build
 OS ?= linux
@@ -30,18 +31,24 @@ INSTALL ?= install
 INSTALL_PROGRAM ?= $(INSTALL)
 INSTALL_DATA ?= $(INSTALL -m 644)
 
+# newer Git versions support "git branch --show-current", this is for compatibiliy with older versions (2.25.4)
+GIT_CURRENT_BRANCH := $(shell git branch --contains=HEAD | grep --line-regexp '\* .*' --max-count=1 | sed 's/\* //')
 
 # packaging
 PKG_DIST_DIR ?= $(abspath $(makefile_dir)/..)
 PKG_TGZ_NAME = mute-$(MUTE_LATEST_TAG)-$(OS)-$(ARCH).tar.gz
 PBUILDER_COMPONENTS ?= "main universe"
-PBUILDER_RC ?= $(makefile_dir)/packaging/pbuilderrc
+PBUILDER_RC ?= $(makefile_dir)packaging/pbuilderrc
+PBUILDER_HOOKS_DIR ?= $(makefile_dir)packaging/pbuilder-hooks
 RPM_DEV_TREE ?= $(HOME)/rpmbuild
 
 # find Debian package version from the changelog file. latest version
 # should be at the top, first matching 'mute (0.1.0-1) ...' and sed clears chars not in version
 MUTE_DEB_VERSION := $(shell grep --only-matching --max-count 1 --perl-regexp "^\s*mute\s+\(.+\)\s*" packaging/debian/changelog | sed 's/[^0-9.-]//g')
 MUTE_DEB_UPSTREAM_VERSION := $(shell echo $(MUTE_DEB_VERSION) | grep --only-matching --perl-regexp '^[0-9.]+')
+MUTE_DEB_UPSTREAM_TARBAL_PATH := $(abspath $(makefile_dir)/..)
+MUTE_DEB_UPSTREAM_TARBAL := $(MUTE_DEB_UPSTREAM_TARBAL_PATH)/mute_$(MUTE_DEB_UPSTREAM_VERSION).orig.tar.gz
+DEB_BUILD_GIT_BRANCH := pkg-deb-$(MUTE_DEB_VERSION)-$(TIMESTAMP_MINUTE)
 
 # find rpm version from the spec file. latest version
 # should be in the top tags, first matching 'Version: 0.1.0' and sed clears chars not in version
@@ -88,18 +95,26 @@ distclean: clean
 pkg-deb: export prefix = /usr
 # requires a cowbuilder environment. see pkg-deb-setup
 pkg-deb:
-	(test ! -e debian && echo "no debian directory exists! creating one ..." && /bin/true) || (echo "debian directory exists. Remove to continue. aborting!" && /bin/false)
-	tar --exclude-vcs -zcf ../mute_$(MUTE_DEB_UPSTREAM_VERSION).orig.tar.gz .
-	cp -r packaging/debian debian
-	env PKG_DIST_DIR=$(PKG_DIST_DIR) DIST=$(DIST) ARCH=$(ARCH) BUILDER=cowbuilder GIT_PBUILDER_OPTIONS="--configfile=$(PBUILDER_RC)" BUILDRESULT=$(PKG_DIST_DIR) git-pbuilder
+	git checkout -b $(DEB_BUILD_GIT_BRANCH)
+	rm -f $(MUTE_DEB_UPSTREAM_TARBAL); tar --exclude-backups --exclude-vcs -zcf $(MUTE_DEB_UPSTREAM_TARBAL) .
+	cp -r packaging/debian debian; git add debian; git commit -m 'add debian dir for packaging v$(MUTE_DEB_VERSION)'
+	gbp buildpackage --git-ignore-new --git-verbose --git-pbuilder \
+			 --git-no-create-orig --git-tarball-dir=$(MUTE_DEB_UPSTREAM_TARBAL_PATH) \
+			 --git-hooks \
+			 --git-dist=$(DIST) --git-arch=$(ARCH) \
+			 --git-ignore-new --git-ignore-branch \
+			 --git-pbuilder-options='--configfile=$(PBUILDER_RC) --hookdir=$(PBUILDER_HOOKS_DIR) --buildresult=$(PKG_DIST_DIR)' \
+			 -b -us -uc -sa
+	git checkout $(GIT_CURRENT_BRANCH)
+	git branch -D $(DEB_BUILD_GIT_BRANCH)
 
 # required:
 # sudo apt-get install build-essential debhelper pbuilder fakeroot cowbuilder git-buildpackage devscripts ubuntu-dev-tools
 pkg-deb-setup:
-	echo "creating a git-pbuilder environment with latest go version ..."
-	DIST=$(DIST) ARCH=$(ARCH) git-pbuilder create --components=$(PBUILDER_COMPONENTS) --extrapackages="cowdancer" --configfile=$(PBUILDER_RC)
-	echo "apt-get update; apt-get install -yq software-properties-common;" | sudo $(cowbuilder) --login --save-after-login
-	echo "add-apt-repository ppa:longsleep/golang-backports; apt-get update;" | sudo $(cowbuilder) --login --save-after-login
+	echo "creating a git-pbuilder environment with apt repositories to install new go versions ..."
+	DIST=$(DIST) ARCH=$(ARCH) git-pbuilder create --components=$(PBUILDER_COMPONENTS) \
+							--extrapackages="cowdancer curl wget" --configfile=$(PBUILDER_RC) \
+							--hookdir=$(PBUILDER_HOOKS_DIR)
 
 pkg-tgz: build
 	tar --create --gzip --exclude-vcs --exclude=docs/man/*.rst --file $(PKG_DIST_DIR)/$(PKG_TGZ_NAME) mute README.rst LICENSE docs/man/mute.1
