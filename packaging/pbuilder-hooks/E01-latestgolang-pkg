@@ -12,10 +12,17 @@
 
 DIST="$DISTRIBUTION"  # DISTRIBUTION is passed by pbuilder
 
-# @TODO: support Debian backports if not on Ubuntu
-echo "Ensuring golang backports PPA ..."
-apt-get update; apt-get install -yq software-properties-common
-add-apt-repository ppa:longsleep/golang-backports; apt-get update
-
-
-
+if [[ "$DIST" = 'buster' ]]; then
+    if grep --no-messages --no-filename --recursive --fixed-strings buster-backports \
+        /etc/apt/sources.list* | grep -qv --line-regexp '\#.*deb .*'; then
+        echo "Buster backports apt repo already exists"
+    else
+        echo "Ensuring buster backports apt repo ..."
+        echo 'deb http://deb.debian.org/debian buster-backports main' \
+            >>/etc/apt/sources.list.d/buster-backports.list
+    fi
+else
+    echo "Ensuring golang backports PPA ..."
+    apt-get update; apt-get install -yq software-properties-common
+    add-apt-repository ppa:longsleep/golang-backports; apt-get update
+fi
