@@ -5,7 +5,7 @@ SHELL = /bin/sh
 makefile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 makefile_dir := $(dir $(makefile_path))
 MUTE_LATEST_TAG := $(shell git tag --list | grep --only-matching --line-regexp --perl-regexp '\d+\.\d+\.\d+' | uniq | sort -V | tail -n 1)
-TIMESTAMP_MINUTE := $(shell date -u +%Y%m%d%H%m)
+TIMESTAMP_MINUTE := $(shell date -u +%Y%m%d%H%M)
 
 # build
 OS ?= linux
