@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# This pbuilder hook is executed after a pbuidler environment create/update.
+# so we can modify the chroot environment.
+#
+# for this hook to be picked up, HOOKDIR variable should be set in pbuilderrc
+# file, or --hookdir should be passed to pbuilder
+#
+# see:
+# https://manpages.debian.org/testing/pbuilder/pbuilder.8.en.html (--hookdir)
+# https://wiki.ubuntu.com/PbuilderHowto#Using_backport_repositories_in_pbuilder
+
+DIST="$DISTRIBUTION"  # DISTRIBUTION is passed by pbuilder
+SIGNATUE="created by pbuilder hook 'E01latestgolang-pkg'"
+
+if [[ "$DIST" = 'buster' ]]; then
+    if grep --no-messages --no-filename --recursive --fixed-strings buster-backports \
+        /etc/apt/sources.list* | grep -qv --line-regexp '\#.*deb .*'; then
+        echo "Buster backports apt repo already exists"
+    else
+        echo "Ensuring buster backports apt repo ..."
+        cat >> "/etc/apt/sources.list.d/$DIST-backports.list" << EOF
+# $SIGNATUE
+deb http://deb.debian.org/debian $DIST-backports main
+EOF
+    fi
+    cat >> "/etc/apt/preferences.d/$DIST-backports" << EOF
+# $SIGNATUE
+# pin backports repo to lower priority for all packages but golang
+# so we can use the latest go compiler
+Package: *
+Pin: release a=$DIST-backports
+Pin-Priority: 10
+
+Package: golang*
+Pin: release a=$DIST-backports
+Pin-Priority: 999
+EOF
+else
+    echo "Ensuring golang backports PPA ..."
+    apt-get update; apt-get install -yq software-properties-common
+    add-apt-repository ppa:longsleep/golang-backports; apt-get update
+fi
+
+apt-get update
