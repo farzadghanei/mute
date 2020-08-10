@@ -10,7 +10,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "version %v. Usage: %v COMMAND", mute.Version, os.Args[0])
+		fmt.Fprintf(os.Stderr, "Version %v. Usage: %v COMMAND\n", mute.Version, os.Args[0])
 		os.Exit(mute.ExitErrExec)
 	}
 	// use config file if accessible, otherwise use a default conf
