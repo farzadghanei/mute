@@ -132,6 +132,7 @@ pkg-rpm:
 	cp packaging/mute.spec $(RPM_DEV_TREE)/SPECS/mute-$(MUTE_RPM_VERSION).spec
 	rpmbuild -bs $(RPM_DEV_TREE)/SPECS/mute-$(MUTE_RPM_VERSION).spec
 	rpmbuild --rebuild $(RPM_DEV_TREE)/SRPMS/mute-$(MUTE_RPM_VERSION)*.src.rpm
+	find $(RPM_DEV_TREE)/RPMS -type f -readable -name 'mute-$(MUTE_RPM_VERSION)*.rpm' -exec mv '{}' $(PKG_DIST_DIR) \;
 
 pkg-clean:
 	rm -rf debian
@@ -144,6 +145,10 @@ pkg-checksum:
 	if test -e $(PKG_DIST_DIR); then cd $(PKG_DIST_DIR) \
 	    && (sed -i '/mute_$(MUTE_DEB_VERSION).*deb/d' $(PKG_CHECKSUM_NAME) || true) \
 	    && find . -maxdepth 1 -readable -type f -name 'mute_$(MUTE_DEB_VERSION)*.deb' \
+	    -exec sha256sum '{}' \; >> $(PKG_CHECKSUM_NAME); fi
+	if test -e $(PKG_DIST_DIR); then cd $(PKG_DIST_DIR) \
+	    && (sed -i '/mute-$(MUTE_RPM_VERSION).*rpm/d' $(PKG_CHECKSUM_NAME) || true) \
+	    && find . -maxdepth 1 -readable -type f -name 'mute-$(MUTE_RPM_VERSION)*.rpm' \
 	    -exec sha256sum '{}' \; >> $(PKG_CHECKSUM_NAME); fi
 
 # required: python docutils
