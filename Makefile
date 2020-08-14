@@ -5,6 +5,7 @@ SHELL = /bin/sh
 makefile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 makefile_dir := $(dir $(makefile_path))
 MUTE_LATEST_TAG := $(shell git tag --list | grep --only-matching --line-regexp --perl-regexp '\d+\.\d+\.\d+' | uniq | sort -V | tail -n 1)
+MUTE_VERSION := $(MUTE_LATEST_TAG)
 TIMESTAMP_MINUTE := $(shell date -u +%Y%m%d%H%M)
 
 # build
@@ -35,8 +36,11 @@ INSTALL_DATA ?= $(INSTALL -m 644)
 GIT_CURRENT_BRANCH := $(shell git branch --contains=HEAD | grep --line-regexp '\* .*' --max-count=1 | sed 's/\* //')
 
 # packaging
+SHA256SUM ?= sha256sum -b
 PKG_DIST_DIR ?= $(abspath $(makefile_dir)/..)
-PKG_TGZ_NAME = mute-$(MUTE_LATEST_TAG)-$(OS)-$(ARCH).tar.gz
+PKG_TGZ_NAME = mute-$(MUTE_VERSION)-$(OS)-$(ARCH).tar.gz
+PKG_TGZ_PATH = $(PKG_DIST_DIR)/$(PKG_TGZ_NAME)
+PKG_CHECKSUM_NAME = mute-$(MUTE_VERSION)-SHA256SUMS
 PBUILDER_COMPONENTS ?= "main universe"
 PBUILDER_RC ?= $(makefile_dir)packaging/pbuilderrc
 PBUILDER_HOOKS_DIR ?= $(makefile_dir)packaging/pbuilder-hooks
@@ -117,7 +121,7 @@ pkg-deb-setup:
 							--hookdir=$(PBUILDER_HOOKS_DIR)
 
 pkg-tgz: build
-	tar --create --gzip --exclude-vcs --exclude=docs/man/*.rst --file $(PKG_DIST_DIR)/$(PKG_TGZ_NAME) mute README.rst LICENSE docs/man/mute.1
+	tar --create --gzip --exclude-vcs --exclude=docs/man/*.rst --file $(PKG_TGZ_PATH) mute README.rst LICENSE docs/man/mute.1
 
 # override prefix so .rpm package installs binaries to /usr/bin instead of /usr/local/bin
 pkg-rpm: export prefix = /usr
@@ -128,10 +132,24 @@ pkg-rpm:
 	cp packaging/mute.spec $(RPM_DEV_TREE)/SPECS/mute-$(MUTE_RPM_VERSION).spec
 	rpmbuild -bs $(RPM_DEV_TREE)/SPECS/mute-$(MUTE_RPM_VERSION).spec
 	rpmbuild --rebuild $(RPM_DEV_TREE)/SRPMS/mute-$(MUTE_RPM_VERSION)*.src.rpm
+	find $(RPM_DEV_TREE)/RPMS -type f -readable -name 'mute-$(MUTE_RPM_VERSION)*.rpm' -exec mv '{}' $(PKG_DIST_DIR) \;
 
 pkg-clean:
 	rm -rf debian
 	rm -f $(PKG_TGZ_NAME)
+
+pkg-checksum:
+	if test -e $(PKG_TGZ_PATH); then cd $(PKG_DIST_DIR) \
+	    && (sed -i '/$(PKG_TGZ_NAME)/d' $(PKG_CHECKSUM_NAME) || true) \
+	    && $(SHA256SUM) $(PKG_TGZ_NAME) >> $(PKG_CHECKSUM_NAME); fi
+	if test -e $(PKG_DIST_DIR); then cd $(PKG_DIST_DIR) \
+	    && (sed -i '/mute_$(MUTE_DEB_VERSION).*deb/d' $(PKG_CHECKSUM_NAME) || true) \
+	    && find . -maxdepth 1 -readable -type f -name 'mute_$(MUTE_DEB_VERSION)*.deb' \
+	    -exec sha256sum '{}' \; >> $(PKG_CHECKSUM_NAME); fi
+	if test -e $(PKG_DIST_DIR); then cd $(PKG_DIST_DIR) \
+	    && (sed -i '/mute-$(MUTE_RPM_VERSION).*rpm/d' $(PKG_CHECKSUM_NAME) || true) \
+	    && find . -maxdepth 1 -readable -type f -name 'mute-$(MUTE_RPM_VERSION)*.rpm' \
+	    -exec sha256sum '{}' \; >> $(PKG_CHECKSUM_NAME); fi
 
 # required: python docutils
 docs:
