@@ -5,7 +5,7 @@ SHELL = /bin/sh
 makefile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 makefile_dir := $(dir $(makefile_path))
 MUTE_LATEST_TAG := $(shell git tag --list | grep --only-matching --line-regexp --perl-regexp '\d+\.\d+\.\d+' | uniq | sort -V | tail -n 1)
-MUTE_VERSION := $(MUTE_LATEST_TAG)
+MUTE_VERSION := $(shell grep --perl-regex '^\s*const\s+Version\s+string' conf.go | grep --only-matching --perl-regexp '[\d\.]+')
 TIMESTAMP_MINUTE := $(shell date -u +%Y%m%d%H%M)
 
 # build
