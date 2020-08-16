@@ -151,9 +151,20 @@ pkg-checksum:
 	    && find . -maxdepth 1 -readable -type f -name 'mute-$(MUTE_RPM_VERSION)*.rpm' \
 	    -exec sha256sum '{}' \; >> $(PKG_CHECKSUM_NAME); fi
 
+# sync version from source code to other files (docs, packaging, etc.)
+sync-version:
+	@ # update first occurrence of version in man page source and regen the man page
+	@ sed -i 's/^:Version:.*/:Version: $(MUTE_VERSION)/;t' docs/man/mute.rst && $(MAKE) docs
+	@ # update first occurrence of version  in RPM spec
+	@ sed -i 's/^Version:.*/Version: $(MUTE_VERSION)/;t' packaging/mute.spec
+	@ (grep --max 1 --only --perl-regexp '^mute.+\(.+\).+' packaging/debian/changelog | grep -q -F $(MUTE_VERSION)) || \
+	    echo -e "\e[33m*** NOTE:\e[m version $(MUTE_VERSION) maybe missing from Debian changelog"
+	@ (grep --line-regexp '%changelog' -A 50 packaging/mute.spec | grep -q -F $(MUTE_VERSION)) || \
+	    echo -e "\e[33m*** NOTE:\e[m version $(MUTE_VERSION) maybe missing from RPM changelog"
+
 # required: python docutils
 docs:
 	rst2man.py --input-encoding=utf8 --output-encoding=utf8 --strict docs/man/mute.rst docs/man/mute.1
 
 .DEFAULT_GOAL := build
-.PHONY: test build test-build install pkg-deb pkg-clean pkg-deb-setup pkg-tgz docs
+.PHONY: test build test-build install pkg-deb pkg-clean pkg-deb-setup pkg-tgz pkg-checksum sync-version docs
