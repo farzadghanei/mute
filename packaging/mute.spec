@@ -1,5 +1,5 @@
 Name: mute
-Version: 0.1.0
+Version: 0.1.1
 Release: 1%{?dist}
 Summary: Run other programs muting the output when configured
 
@@ -15,9 +15,15 @@ mute runs other programs and mutes the output under configured
 conditions. A good use case is to keep cron jobs silenced and avoid receiving
 emails for known conditions.
 
-%prep
-echo 'no prep needed!'
 
+# go toolchain stores go build id in a different ELF note than GNU toolchain
+# so RPM can't find the build id from the binaries after build.
+# https://github.com/rpm-software-management/rpm/issues/367
+%global _missing_build_ids_terminate_build 0
+%define debug_package %{nil}
+
+%prep
+%setup -c -q
 
 %build
 %make_build
@@ -30,6 +36,10 @@ mkdir -p $RPM_BUILD_ROOT/usr/share/man/man1
 cp -a docs/man/mute.1 $RPM_BUILD_ROOT/usr/share/man/man1/%{name}.1
 
 
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+
 %files
 %license LICENSE
 %doc README.rst
@@ -38,6 +48,12 @@ cp -a docs/man/mute.1 $RPM_BUILD_ROOT/usr/share/man/man1/%{name}.1
 
 
 %changelog
+* Sun Aug 16 2020 Farzad Ghanei <farzad.ghanei@tutanota.com> 0.1.1-1
+- Fix missing new line at the end of the help message (Closes: #15)
+- Fix formatting issues in README
+- Redo Debian packaging, support Debian buster, use gbp (Closes: #12)
+- Add RPM packaging
+
 * Sun Jan 05 2020 Farzad Ghanei <farzad.ghanei@tutanota.com> 0.1.0-1
 - Handle signals (Closes: #4)
 - Use environment variables to configure current run

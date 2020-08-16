@@ -4,7 +4,6 @@
 SHELL = /bin/sh
 makefile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 makefile_dir := $(dir $(makefile_path))
-MUTE_LATEST_TAG := $(shell git tag --list | grep --only-matching --line-regexp --perl-regexp '\d+\.\d+\.\d+' | uniq | sort -V | tail -n 1)
 MUTE_VERSION := $(shell grep --perl-regex '^\s*const\s+Version\s+string' conf.go | grep --only-matching --perl-regexp '[\d\.]+')
 TIMESTAMP_MINUTE := $(shell date -u +%Y%m%d%H%M)
 
@@ -57,6 +56,8 @@ DEB_BUILD_GIT_BRANCH := pkg-deb-$(MUTE_DEB_VERSION)-$(TIMESTAMP_MINUTE)
 # find rpm version from the spec file. latest version
 # should be in the top tags, first matching 'Version: 0.1.0' and sed clears chars not in version
 MUTE_RPM_VERSION := $(shell grep --only-matching --max-count 1 --line-regexp --perl-regexp "\s*Version\:\s*.+\s*" packaging/mute.spec | sed 's/[^0-9.]//g')
+RPM_DEV_SRC_TGZ = $(RPM_DEV_TREE)/SOURCES/mute-$(MUTE_RPM_VERSION).tar.gz
+RPM_DEV_SPEC = $(RPM_DEV_TREE)/SPECS/mute-$(MUTE_RPM_VERSION).spec
 
 # command aliases
 cowbuilder = env DISTRIBUTION=$(DIST) ARCH=$(ARCH) BASEPATH=/var/cache/pbuilder/base-$(DIST)-$(ARCH).cow cowbuilder
@@ -128,9 +129,10 @@ pkg-rpm: export prefix = /usr
 # requires golang compiler > 1.13, and rpmdevtools package
 pkg-rpm:
 	(go version | grep -q go1.1[3-9]) || (echo "please install Go lang tools > 1.13. aborting!" && /bin/false)
-	tar --exclude-vcs -zcf $(RPM_DEV_TREE)/SOURCES/mute-$(MUTE_RPM_VERSION).tar.gz .
-	cp packaging/mute.spec $(RPM_DEV_TREE)/SPECS/mute-$(MUTE_RPM_VERSION).spec
-	rpmbuild -bs $(RPM_DEV_TREE)/SPECS/mute-$(MUTE_RPM_VERSION).spec
+	rm -f $(RPM_DEV_SRC_TGZ)
+	tar --exclude-vcs -zcf $(RPM_DEV_SRC_TGZ) .
+	cp packaging/mute.spec $(RPM_DEV_SPEC)
+	rpmbuild -bs $(RPM_DEV_SPEC)
 	rpmbuild --rebuild $(RPM_DEV_TREE)/SRPMS/mute-$(MUTE_RPM_VERSION)*.src.rpm
 	find $(RPM_DEV_TREE)/RPMS -type f -readable -name 'mute-$(MUTE_RPM_VERSION)*.rpm' -exec mv '{}' $(PKG_DIST_DIR) \;
 
