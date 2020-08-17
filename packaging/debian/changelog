@@ -1,3 +1,14 @@
+mute (0.1.1-1) UNRELEASED; urgency=low
+
+  [ Farzad Ghanei ]
+
+  * Fix missing new line at the end of the help message (Closes: #15)
+  * Fix formatting issues in README
+  * Redo Debian packaging, support Debian buster, use gbp (Closes: #12)
+  * Add RPM packaging
+
+ -- Farzad Ghanei <farzad.ghanei@tutanota.com>  Sun, 16 Aug 2020 12:20:40 +0200
+
 mute (0.1.0-1) UNRELEASED; urgency=low
 
   [ Farzad Ghanei ]

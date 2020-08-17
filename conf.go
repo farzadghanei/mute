@@ -14,7 +14,7 @@ import (
 )
 
 // Version is the program version
-const Version string = "0.1.0"
+const Version string = "0.1.1"
 const ENV_CONFIG string = "MUTE_CONFIG"
 const ENV_EXIT_CODES string = "MUTE_EXIT_CODES"
 const ENV_STDOUT_PATTERN string = "MUTE_STDOUT_PATTERN"
