@@ -29,12 +29,13 @@ type execContext struct {
 // executes a command, checks the exit codes and matches stdout with patterns,
 // and writes the stdout/sterr when configuration did not match.
 // Return the exit code of cmd, and an error if any
-func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer, errWriter io.Writer) (int, error) {
+// bufPreAlloc is the initial size of the buffer for stdout/stderr of subcommand, in bytes
+func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer, errWriter io.Writer, bufPreAlloc int) (int, error) {
 	if cmd == "" {
 		panic("cmd is empty")
 	}
 	crt := cmdCriteria(cmd, conf)
-	ctx := execCmd(cmd, args)
+	ctx := execCmd(cmd, args, bufPreAlloc)
 	if !matchesCriteria(crt, ctx.ExitCode, ctx.StdoutText) {
 		fmt.Fprintf(outWriter, "%v", *ctx.StdoutText)
 		fmt.Fprintf(errWriter, "%v", *ctx.StderrText)
@@ -43,8 +44,12 @@ func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer, errWriter 
 }
 
 // execCmd runs the command with args and returns a pointer to an execContext
-func execCmd(cmd string, args []string) *execContext {
+func execCmd(cmd string, args []string, bufPreAlloc int) *execContext {
 	var stdoutBuffer, stderrBuffer bytes.Buffer
+	if bufPreAlloc > 0 {
+		stdoutBuffer.Grow(bufPreAlloc)
+		stderrBuffer.Grow(bufPreAlloc)
+	}
 	var stdoutStr, stderrStr string
 	var cmdExitCode int
 	var err error

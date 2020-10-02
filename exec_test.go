@@ -13,7 +13,7 @@ func TestExecMute(t *testing.T) {
 	var errBuf bytes.Buffer
 	outWriter := bufio.NewWriter(&outBuf)
 	errWriter := bufio.NewWriter(&errBuf)
-	code, err := Exec("go", []string{"version"}, conf, outWriter, errWriter)
+	code, err := Exec("go", []string{"version"}, conf, outWriter, errWriter, 1024)
 	outWriter.Flush()
 	errWriter.Flush()
 	if err != nil {
@@ -38,7 +38,7 @@ func TestExecNoMute(t *testing.T) {
 	var errBuf bytes.Buffer
 	outWriter := bufio.NewWriter(&outBuf)
 	errWriter := bufio.NewWriter(&errBuf)
-	code, err := Exec("go", []string{"invalid"}, conf, outWriter, errWriter)
+	code, err := Exec("go", []string{"invalid"}, conf, outWriter, errWriter, 1024)
 	outWriter.Flush()
 	errWriter.Flush()
 	if err == nil {
