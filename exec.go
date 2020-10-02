@@ -16,12 +16,13 @@ import (
 // ExitErrExec is exit code when failed to execute the command
 const ExitErrExec = 127
 
-// execContext is the details of an executed command, and the expected conditions to act on
+// execContext is the details of an executed command
 type execContext struct {
 	Cmd        string
 	ExitCode   int
 	StdoutText *string
-	Conf       *Conf
+	StderrText *string
+	Error      error
 }
 
 // Exec runs a command muting the output when matched the configuration
@@ -32,10 +33,22 @@ func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer, errWriter 
 	if cmd == "" {
 		panic("cmd is empty")
 	}
+	ctx := execCmd(cmd, args)
+	crt := cmdCriteria(ctx.Cmd, conf)
+	if !matchesCriteria(crt, ctx.ExitCode, ctx.StdoutText) {
+		fmt.Fprintf(outWriter, "%v", *ctx.StdoutText)
+		fmt.Fprintf(errWriter, "%v", *ctx.StderrText)
+	}
+	return ctx.ExitCode, ctx.Error
+}
+
+// execCmd runs the command with args and returns a pointer to an execContext
+func execCmd(cmd string, args []string) *execContext {
+	var stdoutBuffer, stderrBuffer bytes.Buffer
+	var stdoutStr, stderrStr string
 	var cmdExitCode int
 	var err error
-	var stdoutBuffer bytes.Buffer
-	var stderrBuffer bytes.Buffer
+	var ctx = execContext{Cmd: cmd}
 	var sigs = make(chan os.Signal, 1)
 
 	execCmd := exec.Command(cmd, args...)
@@ -58,15 +71,15 @@ func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer, errWriter 
 			cmdExitCode = ExitErrExec
 		}
 	}
-	stdoutStr := stdoutBuffer.String()
-	stdoutBuffer.Reset() // free output from memory
-	ctx := execContext{Cmd: cmd, ExitCode: cmdExitCode, StdoutText: &stdoutStr, Conf: conf}
-	crt := cmdCriteria(ctx.Cmd, ctx.Conf)
-	if !matchesCriteria(crt, ctx.ExitCode, ctx.StdoutText) {
-		fmt.Fprintf(outWriter, "%v", stdoutStr)
-		fmt.Fprintf(errWriter, "%v", stderrBuffer.String())
-	}
-	return cmdExitCode, err
+	stdoutStr = stdoutBuffer.String()
+	stdoutBuffer.Reset()
+	stderrStr = stderrBuffer.String()
+	stderrBuffer.Reset()
+	ctx.ExitCode = cmdExitCode
+	ctx.StdoutText = &stdoutStr
+	ctx.StderrText = &stderrStr
+	ctx.Error = err
+	return &ctx
 }
 
 // matchesCriteria indicates if results of an exec matches a given Criteria
