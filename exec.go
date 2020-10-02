@@ -33,8 +33,8 @@ func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer, errWriter 
 	if cmd == "" {
 		panic("cmd is empty")
 	}
+	crt := cmdCriteria(cmd, conf)
 	ctx := execCmd(cmd, args)
-	crt := cmdCriteria(ctx.Cmd, conf)
 	if !matchesCriteria(crt, ctx.ExitCode, ctx.StdoutText) {
 		fmt.Fprintf(outWriter, "%v", *ctx.StdoutText)
 		fmt.Fprintf(errWriter, "%v", *ctx.StderrText)
