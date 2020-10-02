@@ -4,8 +4,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/farzadghanei/mute"
 	"os"
+
+	"github.com/farzadghanei/mute"
 )
 
 func main() {

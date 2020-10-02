@@ -1,4 +1,4 @@
-// package mute implements functions to execute other programs muting std streams if required
+// Package mute implements functions to execute other programs muting std streams if required
 // license: MIT, see LICENSE for details.
 package mute
 
@@ -59,6 +59,7 @@ func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer, errWriter 
 		}
 	}
 	stdoutStr := stdoutBuffer.String()
+	stdoutBuffer.Reset() // free output from memory
 	ctx := execContext{Cmd: cmd, ExitCode: cmdExitCode, StdoutText: &stdoutStr, Conf: conf}
 	crt := cmdCriteria(ctx.Cmd, ctx.Conf)
 	if !matchesCriteria(crt, ctx.ExitCode, ctx.StdoutText) {
@@ -92,7 +93,7 @@ func matchesCriteria(criteria *Criteria, code int, stdout *string) bool {
 // should be checked against
 func cmdCriteria(cmd string, conf *Conf) *Criteria {
 	matched := ""
-	for key, _ := range conf.Commands {
+	for key := range conf.Commands {
 		if len(key) > len(matched) && strings.HasPrefix(cmd, key) {
 			matched = key
 		}
