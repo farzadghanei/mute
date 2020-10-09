@@ -235,11 +235,11 @@ func TestConfFromEnvStr(t *testing.T) {
 func TestGetCmdConfFromEnv(t *testing.T) {
 	var got, want *Conf
 	var err error
-	os.Setenv(ENV_CONFIG, "fixtures/simple.toml")
-	defer os.Unsetenv(ENV_CONFIG)
+	os.Setenv(EnvConfig, "fixtures/simple.toml")
+	defer os.Unsetenv(EnvConfig)
 
-	os.Unsetenv(ENV_EXIT_CODES)
-	os.Unsetenv(ENV_STDOUT_PATTERN)
+	os.Unsetenv(EnvExitCodes)
+	os.Unsetenv(EnvStdoutPattern)
 
 	want = createSimpleConf()
 	got, err = GetCmdConf()
@@ -250,10 +250,10 @@ func TestGetCmdConfFromEnv(t *testing.T) {
 		t.Errorf("GetCmdConf no env conf want simple %v got %v", want, got)
 	}
 
-	os.Setenv(ENV_EXIT_CODES, "")
-	defer os.Unsetenv(ENV_EXIT_CODES)
-	os.Setenv(ENV_STDOUT_PATTERN, "")
-	defer os.Unsetenv(ENV_STDOUT_PATTERN)
+	os.Setenv(EnvExitCodes, "")
+	defer os.Unsetenv(EnvExitCodes)
+	os.Setenv(EnvStdoutPattern, "")
+	defer os.Unsetenv(EnvStdoutPattern)
 
 	got, err = GetCmdConf()
 	if err != nil {
@@ -267,8 +267,8 @@ func TestGetCmdConfFromEnv(t *testing.T) {
 	want = new(Conf)
 	want.Default.add(c1)
 
-	os.Setenv(ENV_EXIT_CODES, "4,5")
-	os.Setenv(ENV_STDOUT_PATTERN, "[0-9]test")
+	os.Setenv(EnvExitCodes, "4,5")
+	os.Setenv(EnvStdoutPattern, "[0-9]test")
 	got, err = GetCmdConf()
 
 	if err != nil {
@@ -278,7 +278,7 @@ func TestGetCmdConfFromEnv(t *testing.T) {
 		t.Errorf("GetCmdConf env want %v got %v", want, got)
 	}
 
-	os.Setenv(ENV_EXIT_CODES, "4,z")
+	os.Setenv(EnvExitCodes, "4,z")
 	got, err = GetCmdConf()
 
 	if err == nil {
@@ -288,8 +288,8 @@ func TestGetCmdConfFromEnv(t *testing.T) {
 		t.Errorf("GetCmdConf env invalid exit code want empty conf, got %v", got)
 	}
 
-	os.Setenv(ENV_EXIT_CODES, "")
-	os.Setenv(ENV_STDOUT_PATTERN, "[")
+	os.Setenv(EnvExitCodes, "")
+	os.Setenv(EnvStdoutPattern, "[")
 	got, err = GetCmdConf()
 
 	if err == nil {
@@ -301,8 +301,8 @@ func TestGetCmdConfFromEnv(t *testing.T) {
 }
 
 func TestGetCmdConfFromFile(t *testing.T) {
-	os.Setenv(ENV_CONFIG, "fixtures/simple.toml")
-	defer os.Unsetenv(ENV_CONFIG)
+	os.Setenv(EnvConfig, "fixtures/simple.toml")
+	defer os.Unsetenv(EnvConfig)
 	want := createSimpleConf()
 	defaultConf := DefaultConf()
 	got, err := GetCmdConf()
@@ -313,7 +313,7 @@ func TestGetCmdConfFromFile(t *testing.T) {
 		t.Errorf("GetCmdConf simple conf want simple %v got %v", want, got)
 	}
 
-	os.Setenv(ENV_CONFIG, "")
+	os.Setenv(EnvConfig, "")
 	got, err = GetCmdConf()
 	if err != nil {
 		t.Errorf("GetCmdConf empty env want no error, got: %v", err)
