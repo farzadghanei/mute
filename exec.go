@@ -25,20 +25,30 @@ type execContext struct {
 	Error      error
 }
 
-// Exec runs a command muting the output when matched the configuration
+// Target is the struct to specify what to exec, when to mute and where to print otherwise
+type Target struct {
+	Cmd         string
+	Args        []string
+	Conf        *Conf
+	OutWriter   io.Writer
+	ErrWriter   io.Writer
+	BufPreAlloc int // initial size (bytes) of the buffer for stdout/stderr
+}
+
+// Exec runs the target command muting the output when matched the configuration
 // executes a command, checks the exit codes and matches stdout with patterns,
 // and writes the stdout/sterr when configuration did not match.
-// Return the exit code of cmd, and an error if any
-// bufPreAlloc is the initial size of the buffer for stdout/stderr of subcommand, in bytes
-func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer, errWriter io.Writer, bufPreAlloc int) (int, error) {
-	if cmd == "" {
-		panic("cmd is empty")
+// Return the exit code of cmd, and an error if any.
+// Panics on empty Cmd.
+func (t *Target) Exec() (int, error) {
+	if t.Cmd == "" {
+		panic("target cmd is empty")
 	}
-	crt := cmdCriteria(cmd, conf)
-	ctx := execCmd(cmd, args, bufPreAlloc)
+	crt := cmdCriteria(t.Cmd, t.Conf)
+	ctx := execCmd(t.Cmd, t.Args, t.BufPreAlloc)
 	if !matchesCriteria(crt, ctx.ExitCode, ctx.StdoutText) {
-		fmt.Fprintf(outWriter, "%v", *ctx.StdoutText)
-		fmt.Fprintf(errWriter, "%v", *ctx.StderrText)
+		fmt.Fprintf(t.OutWriter, "%v", *ctx.StdoutText)
+		fmt.Fprintf(t.ErrWriter, "%v", *ctx.StderrText)
 	}
 	return ctx.ExitCode, ctx.Error
 }

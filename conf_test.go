@@ -1,3 +1,4 @@
+// Package mute implements functions to execute other programs muting std streams if required
 // license: MIT, see LICENSE for details.
 package mute
 
