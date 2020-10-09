@@ -74,12 +74,12 @@ test:
 	go test github.com/farzadghanei/mute
 
 test-build: build
-	./mute fixtures/xecho -c 3 > /dev/null; (test "$$?" -eq 3 || false)
-	./mute fixtures/xecho -c 1 'not muted' | grep -q 'not muted'
-	output=$$(env MUTE_EXIT_CODES=1 ./mute fixtures/xecho -c 1 'muted'); test -z "$$output"
-	env MUTE_EXIT_CODDE=1 ./mute fixtures/xecho -c 2 'not muted' | grep -q 'not muted'
-	output=$$(env MUTE_STDOUT_PATTERN='mute.+' ./mute fixtures/xecho 'will be muted.'); test -z "$$output"
-	env MUTE_STDOUT_PATTERN='nottoday' ./mute fixtures/xecho 'not muted' | grep -q 'not muted'
+	./mute test/data/xecho -c 3 > /dev/null; (test "$$?" -eq 3 || false)
+	./mute test/data/xecho -c 1 'not muted' | grep -q 'not muted'
+	output=$$(env MUTE_EXIT_CODES=1 ./mute test/data/xecho -c 1 'muted'); test -z "$$output"
+	env MUTE_EXIT_CODDE=1 ./mute test/data/xecho -c 2 'not muted' | grep -q 'not muted'
+	output=$$(env MUTE_STDOUT_PATTERN='mute.+' ./mute test/data/xecho 'will be muted.'); test -z "$$output"
+	env MUTE_STDOUT_PATTERN='nottoday' ./mute test/data/xecho 'not muted' | grep -q 'not muted'
 
 
 install: build

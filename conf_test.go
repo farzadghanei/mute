@@ -158,7 +158,7 @@ func TestConfEqual(t *testing.T) {
 }
 
 func TestReadConfFileError(t *testing.T) {
-	_, err := ReadConfFile("fixtures/no_such_file.toml")
+	_, err := ReadConfFile("test/data/no_such_file.toml")
 	if err == nil {
 		t.Errorf("ReadConfFile should have returned error")
 	}
@@ -173,7 +173,7 @@ func TestReadConfFileSimple(t *testing.T) {
 	want := new(Conf)
 	want.Default.add(c1).add(c2)
 
-	got, err := ReadConfFile("fixtures/simple.toml")
+	got, err := ReadConfFile("test/data/simple.toml")
 	if err != nil {
 		t.Errorf("ReadConfFile had error: %v", err)
 	}
@@ -235,7 +235,7 @@ func TestConfFromEnvStr(t *testing.T) {
 func TestGetCmdConfFromEnv(t *testing.T) {
 	var got, want *Conf
 	var err error
-	os.Setenv(EnvConfig, "fixtures/simple.toml")
+	os.Setenv(EnvConfig, "test/data/simple.toml")
 	defer os.Unsetenv(EnvConfig)
 
 	os.Unsetenv(EnvExitCodes)
@@ -301,7 +301,7 @@ func TestGetCmdConfFromEnv(t *testing.T) {
 }
 
 func TestGetCmdConfFromFile(t *testing.T) {
-	os.Setenv(EnvConfig, "fixtures/simple.toml")
+	os.Setenv(EnvConfig, "test/data/simple.toml")
 	defer os.Unsetenv(EnvConfig)
 	want := createSimpleConf()
 	defaultConf := DefaultConf()

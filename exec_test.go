@@ -90,7 +90,7 @@ func TestCmdCriteriaReturnCommandSpecific(t *testing.T) {
 }
 
 func TestMatchesCriteria(t *testing.T) {
-	conf, _ := ReadConfFile("fixtures/simple.toml")
+	conf, _ := ReadConfFile("test/data/simple.toml")
 	crt := conf.Default
 	stdout := ""
 	if !matchesCriteria(&crt, 0, &stdout) {
