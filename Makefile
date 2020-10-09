@@ -41,13 +41,13 @@ PKG_TGZ_NAME = mute-$(MUTE_VERSION)-$(OS)-$(ARCH).tar.gz
 PKG_TGZ_PATH = $(PKG_DIST_DIR)/$(PKG_TGZ_NAME)
 PKG_CHECKSUM_NAME = mute-$(MUTE_VERSION)-SHA256SUMS
 PBUILDER_COMPONENTS ?= "main universe"
-PBUILDER_RC ?= $(makefile_dir)packaging/pbuilderrc
-PBUILDER_HOOKS_DIR ?= $(makefile_dir)packaging/pbuilder-hooks
+PBUILDER_RC ?= $(makefile_dir)build/package/pbuilderrc
+PBUILDER_HOOKS_DIR ?= $(makefile_dir)build/package/pbuilder-hooks
 RPM_DEV_TREE ?= $(HOME)/rpmbuild
 
 # find Debian package version from the changelog file. latest version
 # should be at the top, first matching 'mute (0.1.0-1) ...' and sed clears chars not in version
-MUTE_DEB_VERSION := $(shell grep --only-matching --max-count 1 --perl-regexp "^\s*mute\s+\(.+\)\s*" packaging/debian/changelog | sed 's/[^0-9.-]//g')
+MUTE_DEB_VERSION := $(shell grep --only-matching --max-count 1 --perl-regexp "^\s*mute\s+\(.+\)\s*" build/package/debian/changelog | sed 's/[^0-9.-]//g')
 MUTE_DEB_UPSTREAM_VERSION := $(shell echo $(MUTE_DEB_VERSION) | grep --only-matching --perl-regexp '^[0-9.]+')
 MUTE_DEB_UPSTREAM_TARBAL_PATH := $(abspath $(makefile_dir)/..)
 MUTE_DEB_UPSTREAM_TARBAL := $(MUTE_DEB_UPSTREAM_TARBAL_PATH)/mute_$(MUTE_DEB_UPSTREAM_VERSION).orig.tar.gz
@@ -55,7 +55,7 @@ DEB_BUILD_GIT_BRANCH := pkg-deb-$(MUTE_DEB_VERSION)-$(TIMESTAMP_MINUTE)
 
 # find rpm version from the spec file. latest version
 # should be in the top tags, first matching 'Version: 0.1.0' and sed clears chars not in version
-MUTE_RPM_VERSION := $(shell grep --only-matching --max-count 1 --line-regexp --perl-regexp "\s*Version\:\s*.+\s*" packaging/mute.spec | sed 's/[^0-9.]//g')
+MUTE_RPM_VERSION := $(shell grep --only-matching --max-count 1 --line-regexp --perl-regexp "\s*Version\:\s*.+\s*" build/package/mute.spec | sed 's/[^0-9.]//g')
 RPM_DEV_SRC_TGZ = $(RPM_DEV_TREE)/SOURCES/mute-$(MUTE_RPM_VERSION).tar.gz
 RPM_DEV_SPEC = $(RPM_DEV_TREE)/SPECS/mute-$(MUTE_RPM_VERSION).spec
 
@@ -74,12 +74,12 @@ test:
 	go test github.com/farzadghanei/mute
 
 test-build: build
-	./mute fixtures/xecho -c 3 > /dev/null; (test "$$?" -eq 3 || false)
-	./mute fixtures/xecho -c 1 'not muted' | grep -q 'not muted'
-	output=$$(env MUTE_EXIT_CODES=1 ./mute fixtures/xecho -c 1 'muted'); test -z "$$output"
-	env MUTE_EXIT_CODDE=1 ./mute fixtures/xecho -c 2 'not muted' | grep -q 'not muted'
-	output=$$(env MUTE_STDOUT_PATTERN='mute.+' ./mute fixtures/xecho 'will be muted.'); test -z "$$output"
-	env MUTE_STDOUT_PATTERN='nottoday' ./mute fixtures/xecho 'not muted' | grep -q 'not muted'
+	./mute test/data/xecho -c 3 > /dev/null; (test "$$?" -eq 3 || false)
+	./mute test/data/xecho -c 1 'not muted' | grep -q 'not muted'
+	output=$$(env MUTE_EXIT_CODES=1 ./mute test/data/xecho -c 1 'muted'); test -z "$$output"
+	env MUTE_EXIT_CODDE=1 ./mute test/data/xecho -c 2 'not muted' | grep -q 'not muted'
+	output=$$(env MUTE_STDOUT_PATTERN='mute.+' ./mute test/data/xecho 'will be muted.'); test -z "$$output"
+	env MUTE_STDOUT_PATTERN='nottoday' ./mute test/data/xecho 'not muted' | grep -q 'not muted'
 
 
 install: build
@@ -102,7 +102,7 @@ pkg-deb: export prefix = /usr
 pkg-deb:
 	git checkout -b $(DEB_BUILD_GIT_BRANCH)
 	rm -f $(MUTE_DEB_UPSTREAM_TARBAL); tar --exclude-backups --exclude-vcs -zcf $(MUTE_DEB_UPSTREAM_TARBAL) .
-	cp -r packaging/debian debian; git add debian; git commit -m 'add debian dir for packaging v$(MUTE_DEB_VERSION)'
+	cp -r build/package/debian debian; git add debian; git commit -m 'add debian dir for packaging v$(MUTE_DEB_VERSION)'
 	gbp buildpackage --git-ignore-new --git-verbose --git-pbuilder \
 			 --git-no-create-orig --git-tarball-dir=$(MUTE_DEB_UPSTREAM_TARBAL_PATH) \
 			 --git-hooks \
@@ -131,7 +131,7 @@ pkg-rpm:
 	(go version | grep -q go1.1[3-9]) || (echo "please install Go lang tools > 1.13. aborting!" && /bin/false)
 	rm -f $(RPM_DEV_SRC_TGZ)
 	tar --exclude-vcs -zcf $(RPM_DEV_SRC_TGZ) .
-	cp packaging/mute.spec $(RPM_DEV_SPEC)
+	cp build/package/mute.spec $(RPM_DEV_SPEC)
 	rpmbuild -bs $(RPM_DEV_SPEC)
 	rpmbuild --rebuild $(RPM_DEV_TREE)/SRPMS/mute-$(MUTE_RPM_VERSION)*.src.rpm
 	find $(RPM_DEV_TREE)/RPMS -type f -readable -name 'mute-$(MUTE_RPM_VERSION)*.rpm' -exec mv '{}' $(PKG_DIST_DIR) \;
@@ -158,10 +158,10 @@ sync-version:
 	@ # update first occurrence of version in man page source and regen the man page
 	@ sed -i 's/^:Version:.*/:Version: $(MUTE_VERSION)/;t' docs/man/mute.rst && $(MAKE) docs
 	@ # update first occurrence of version  in RPM spec
-	@ sed -i 's/^Version:.*/Version: $(MUTE_VERSION)/;t' packaging/mute.spec
-	@ (grep --max 1 --only --perl-regexp '^mute.+\(.+\).+' packaging/debian/changelog | grep -q -F $(MUTE_VERSION)) || \
+	@ sed -i 's/^Version:.*/Version: $(MUTE_VERSION)/;t' build/package/mute.spec
+	@ (grep --max 1 --only --perl-regexp '^mute.+\(.+\).+' build/package/debian/changelog | grep -q -F $(MUTE_VERSION)) || \
 	    echo -e "\e[33m*** NOTE:\e[m version $(MUTE_VERSION) maybe missing from Debian changelog"
-	@ (grep --line-regexp '%changelog' -A 50 packaging/mute.spec | grep -q -F $(MUTE_VERSION)) || \
+	@ (grep --line-regexp '%changelog' -A 50 build/package/mute.spec | grep -q -F $(MUTE_VERSION)) || \
 	    echo -e "\e[33m*** NOTE:\e[m version $(MUTE_VERSION) maybe missing from RPM changelog"
 
 # required: python docutils
