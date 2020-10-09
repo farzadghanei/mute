@@ -1,23 +1,30 @@
-// mute executes programs suppressing std streams if required
+// Package mute executes programs suppressing std streams if required
 // license: MIT, see LICENSE for details.
 // BurntSushi/toml module uses MIT license. see LICENSE for more details
 package mute
 
 import (
 	"fmt"
-	"github.com/BurntSushi/toml"
 	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/BurntSushi/toml"
 )
 
 // Version is the program version
 const Version string = "0.1.1"
-const ENV_CONFIG string = "MUTE_CONFIG"
-const ENV_EXIT_CODES string = "MUTE_EXIT_CODES"
-const ENV_STDOUT_PATTERN string = "MUTE_STDOUT_PATTERN"
+
+// EnvConfig is the name of the environment variable to point to config file
+const EnvConfig string = "MUTE_CONFIG"
+
+// EnvExitCodes is the name of the environment variable to overwrite exit codes
+const EnvExitCodes string = "MUTE_EXIT_CODES"
+
+// EnvStdoutPattern is the name of the environment variable to overwrite stdout regex pattern
+const EnvStdoutPattern string = "MUTE_STDOUT_PATTERN"
 
 // ExitErrConf is exit code when config is invalid
 const ExitErrConf = 126
@@ -27,7 +34,7 @@ type StdoutPattern struct {
 	Regexp *regexp.Regexp
 }
 
-// StdoutPattern.UnmarshalText reads the regex pattern from a byte slice
+// UnmarshalText reads the regex pattern from a byte slice
 func (s *StdoutPattern) UnmarshalText(text []byte) error {
 	var err error
 	re, err := regexp.Compile(string(text))
@@ -35,7 +42,7 @@ func (s *StdoutPattern) UnmarshalText(text []byte) error {
 	return err
 }
 
-// StdoutPattern.String return the regex pattern string
+// String return the regex pattern string
 func (s *StdoutPattern) String() string {
 	return s.Regexp.String()
 }
@@ -67,7 +74,7 @@ func (c *Criterion) String() string {
 	return fmt.Sprintf("<Criterion codes=\"%s\" patterns_count=\"%d\">", strings.Join(codes, ","), len(c.StdoutPatterns))
 }
 
-// Criterion.IsEmpty checks if a Criterion is empty (no exit codes, no patterns)
+// IsEmpty checks if a Criterion is empty (no exit codes, no patterns)
 func (c *Criterion) IsEmpty() bool {
 	return len(c.ExitCodes) < 1 && len(c.StdoutPatterns) < 1
 }
@@ -200,7 +207,7 @@ func (c *Conf) equal(c2 *Conf) bool {
 	return true
 }
 
-// Conf.IsEmpty determines if the Conf is empty
+// IsEmpty determines if the Conf is empty
 func (c *Conf) IsEmpty() bool {
 	return len(c.Default) < 1 && len(c.Commands) < 1
 }
@@ -263,8 +270,8 @@ func GetCmdConf() (*Conf, error) {
 	var conf *Conf
 	var err error
 
-	envExitCodes := os.Getenv(ENV_EXIT_CODES)
-	envPattern := os.Getenv(ENV_STDOUT_PATTERN)
+	envExitCodes := os.Getenv(EnvExitCodes)
+	envPattern := os.Getenv(EnvStdoutPattern)
 	conf, err = ConfFromEnvStr(envExitCodes, envPattern)
 
 	if err != nil || !conf.IsEmpty() {
@@ -272,7 +279,7 @@ func GetCmdConf() (*Conf, error) {
 	}
 
 	confPath := "/etc/mute.toml"
-	envConfPath, envConfSet := os.LookupEnv(ENV_CONFIG)
+	envConfPath, envConfSet := os.LookupEnv(EnvConfig)
 	if envConfSet {
 		confPath = envConfPath
 		if confPath == "" {

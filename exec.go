@@ -1,4 +1,4 @@
-// package mute implements functions to execute other programs muting std streams if required
+// Package mute implements functions to execute other programs muting std streams if required
 // license: MIT, see LICENSE for details.
 package mute
 
@@ -16,26 +16,54 @@ import (
 // ExitErrExec is exit code when failed to execute the command
 const ExitErrExec = 127
 
-// execContext is the details of an executed command, and the expected conditions to act on
+// execContext is the details of an executed command
 type execContext struct {
 	Cmd        string
 	ExitCode   int
 	StdoutText *string
-	Conf       *Conf
+	StderrText *string
+	Error      error
 }
 
-// Exec runs a command muting the output when matched the configuration
+// Target is the struct to specify what to exec, when to mute and where to print otherwise
+type Target struct {
+	Cmd         string
+	Args        []string
+	Conf        *Conf
+	OutWriter   io.Writer
+	ErrWriter   io.Writer
+	BufPreAlloc int // initial size (bytes) of the buffer for stdout/stderr
+}
+
+// Exec runs the target command muting the output when matched the configuration
 // executes a command, checks the exit codes and matches stdout with patterns,
 // and writes the stdout/sterr when configuration did not match.
-// Return the exit code of cmd, and an error if any
-func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer, errWriter io.Writer) (int, error) {
-	if cmd == "" {
-		panic("cmd is empty")
+// Return the exit code of cmd, and an error if any.
+// Panics on empty Cmd.
+func (t *Target) Exec() (int, error) {
+	if t.Cmd == "" {
+		panic("target cmd is empty")
 	}
+	crt := cmdCriteria(t.Cmd, t.Conf)
+	ctx := execCmd(t.Cmd, t.Args, t.BufPreAlloc)
+	if !matchesCriteria(crt, ctx.ExitCode, ctx.StdoutText) {
+		fmt.Fprintf(t.OutWriter, "%v", *ctx.StdoutText)
+		fmt.Fprintf(t.ErrWriter, "%v", *ctx.StderrText)
+	}
+	return ctx.ExitCode, ctx.Error
+}
+
+// execCmd runs the command with args and returns a pointer to an execContext
+func execCmd(cmd string, args []string, bufPreAlloc int) *execContext {
+	var stdoutBuffer, stderrBuffer bytes.Buffer
+	if bufPreAlloc > 0 {
+		stdoutBuffer.Grow(bufPreAlloc)
+		stderrBuffer.Grow(bufPreAlloc)
+	}
+	var stdoutStr, stderrStr string
 	var cmdExitCode int
 	var err error
-	var stdoutBuffer bytes.Buffer
-	var stderrBuffer bytes.Buffer
+	var ctx = execContext{Cmd: cmd}
 	var sigs = make(chan os.Signal, 1)
 
 	execCmd := exec.Command(cmd, args...)
@@ -58,14 +86,15 @@ func Exec(cmd string, args []string, conf *Conf, outWriter io.Writer, errWriter 
 			cmdExitCode = ExitErrExec
 		}
 	}
-	stdoutStr := stdoutBuffer.String()
-	ctx := execContext{Cmd: cmd, ExitCode: cmdExitCode, StdoutText: &stdoutStr, Conf: conf}
-	crt := cmdCriteria(ctx.Cmd, ctx.Conf)
-	if !matchesCriteria(crt, ctx.ExitCode, ctx.StdoutText) {
-		fmt.Fprintf(outWriter, "%v", stdoutStr)
-		fmt.Fprintf(errWriter, "%v", stderrBuffer.String())
-	}
-	return cmdExitCode, err
+	stdoutStr = stdoutBuffer.String()
+	stdoutBuffer.Reset()
+	stderrStr = stderrBuffer.String()
+	stderrBuffer.Reset()
+	ctx.ExitCode = cmdExitCode
+	ctx.StdoutText = &stdoutStr
+	ctx.StderrText = &stderrStr
+	ctx.Error = err
+	return &ctx
 }
 
 // matchesCriteria indicates if results of an exec matches a given Criteria
@@ -92,7 +121,7 @@ func matchesCriteria(criteria *Criteria, code int, stdout *string) bool {
 // should be checked against
 func cmdCriteria(cmd string, conf *Conf) *Criteria {
 	matched := ""
-	for key, _ := range conf.Commands {
+	for key := range conf.Commands {
 		if len(key) > len(matched) && strings.HasPrefix(cmd, key) {
 			matched = key
 		}

@@ -4,8 +4,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/farzadghanei/mute"
 	"os"
+
+	"github.com/farzadghanei/mute"
 )
 
 func main() {
@@ -13,6 +14,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Version %v. Usage: %v COMMAND\n", mute.Version, os.Args[0])
 		os.Exit(mute.ExitErrExec)
 	}
+	var target mute.Target
 	// use config file if accessible, otherwise use a default conf
 	// to mute zero exit codes
 	conf, err := mute.GetCmdConf()
@@ -24,6 +26,7 @@ func main() {
 			os.Exit(mute.ExitErrConf)
 		}
 	}
-	exitCode, _ := mute.Exec(os.Args[1], os.Args[2:], conf, os.Stdout, os.Stderr)
+	target = mute.Target{Cmd: os.Args[1], Args: os.Args[2:], Conf: conf, OutWriter: os.Stdout, ErrWriter: os.Stderr, BufPreAlloc: 4096}
+	exitCode, _ := target.Exec()
 	os.Exit(exitCode)
 }

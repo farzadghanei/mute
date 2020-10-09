@@ -1,3 +1,4 @@
+// Package mute implements functions to execute other programs muting std streams if required
 // license: MIT, see LICENSE for details.
 package mute
 
@@ -13,7 +14,8 @@ func TestExecMute(t *testing.T) {
 	var errBuf bytes.Buffer
 	outWriter := bufio.NewWriter(&outBuf)
 	errWriter := bufio.NewWriter(&errBuf)
-	code, err := Exec("go", []string{"version"}, conf, outWriter, errWriter)
+	target := Target{Cmd: "go", Args: []string{"version"}, Conf: conf, OutWriter: outWriter, ErrWriter: errWriter, BufPreAlloc: 1024}
+	code, err := target.Exec()
 	outWriter.Flush()
 	errWriter.Flush()
 	if err != nil {
@@ -38,7 +40,8 @@ func TestExecNoMute(t *testing.T) {
 	var errBuf bytes.Buffer
 	outWriter := bufio.NewWriter(&outBuf)
 	errWriter := bufio.NewWriter(&errBuf)
-	code, err := Exec("go", []string{"invalid"}, conf, outWriter, errWriter)
+	target := Target{Cmd: "go", Args: []string{"invalid"}, Conf: conf, OutWriter: outWriter, ErrWriter: errWriter, BufPreAlloc: 1024}
+	code, err := target.Exec()
 	outWriter.Flush()
 	errWriter.Flush()
 	if err == nil {
