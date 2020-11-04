@@ -15,7 +15,7 @@ import (
 )
 
 // Version is the program version
-const Version string = "0.1.1"
+const Version string = "0.2.0"
 
 // EnvConfig is the name of the environment variable to point to config file
 const EnvConfig string = "MUTE_CONFIG"

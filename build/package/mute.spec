@@ -1,5 +1,5 @@
 Name: mute
-Version: 0.1.1
+Version: 0.2.0
 Release: 1%{?dist}
 Summary: Run other programs muting the output when configured
 
@@ -48,6 +48,12 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Wed Nov 04 2020 Farzad Ghanei <farzad.ghanei@tutanota.com> 0.2.0-1
+- Restructure project layout
+- Restructure Exec, reduce chances of memory allocation failures (Closes: #19)
+- Exec supports pre allocating buffers to prevent extra allocation later
+- Rename constants ENV_* to CamelCase as a more conventional format
+
 * Sun Aug 16 2020 Farzad Ghanei <farzad.ghanei@tutanota.com> 0.1.1-1
 - Fix missing new line at the end of the help message (Closes: #15)
 - Fix formatting issues in README

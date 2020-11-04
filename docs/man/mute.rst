@@ -9,7 +9,7 @@ runs other programs and prevents the output under configured criteria
 :Author: Farzad Ghanei <farzad.ghanei@tutanota.com>
 :Date:   2020-02-16
 :Copyright:  Copyright (c) 2019 Farzad Ghanei. mute is an open source project released under the terms of the MIT license.
-:Version: 0.1.1
+:Version: 0.2.0
 :Manual section: 1
 :Manual group: General Command Manuals
 

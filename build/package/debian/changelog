@@ -1,3 +1,14 @@
+mute (0.2.0-1) UNRELEASED; urgency=low
+
+  [ Farzad Ghanei ]
+
+  * Restructure project layout
+  * Restructure Exec, reduce chances of memory allocation failures (Closes: #19)
+  * Exec supports pre allocating buffers to prevent extra allocation later
+  * Rename constants ENV_* to CamelCase as a more conventional format
+
+ -- Farzad Ghanei <farzad.ghanei@tutanota.com>  Wed, 04 Nov 2020 16:40:40 +0100
+
 mute (0.1.1-1) UNRELEASED; urgency=low
 
   [ Farzad Ghanei ]
