@@ -24,6 +24,7 @@ ARCH ?= amd64
 DIST ?= trixie  # go 1.24 is available in trixie
 GOLDFLAGS ?= "-s"  # by default create a leaner binary
 GOARCH ?= amd64
+GOBUILDFLAGS ?=  # additional build arguments
 
 ifeq ($(ARCH), amd64)
     GOARCH = amd64
@@ -83,7 +84,7 @@ cowbuilder = env DISTRIBUTION=$(DIST) ARCH=$(ARCH) BASEPATH=/var/cache/pbuilder/
 TEST_SKIP_STATICCHECKS ?=
 
 mute:
-	GOOS=$(OS) GOARCH=$(GOARCH) go build -ldflags $(GOLDFLAGS) cmd/mute.go
+	GOOS=$(OS) GOARCH=$(GOARCH) go build -ldflags $(GOLDFLAGS) $(GOBUILDFLAGS) cmd/mute.go
 
 build: mute
 
@@ -124,7 +125,7 @@ pkg-deb: export prefix = /usr
 pkg-deb:
 	git checkout -b $(DEB_BUILD_GIT_BRANCH)
 	rm -f $(MUTE_DEB_UPSTREAM_TARBAL); tar --exclude-backups --exclude-vcs -zcf $(MUTE_DEB_UPSTREAM_TARBAL) .
-	cp -r build/package/debian debian; git add debian; git commit -m 'add debian dir for packaging v$(MUTE_DEB_VERSION)'
+	cp -r build/package/debian .; git add debian; git commit -m 'add debian dir for packaging v$(MUTE_DEB_VERSION)'
 	gbp buildpackage --git-ignore-new --git-verbose --git-pbuilder \
 			 --git-no-create-orig --git-tarball-dir=$(MUTE_DEB_UPSTREAM_TARBAL_PATH) \
 			 --git-hooks \
@@ -193,4 +194,4 @@ docs:
 	rst2man --input-encoding=utf8 --output-encoding=utf8 --strict docs/man/mute.rst docs/man/mute.1
 
 .DEFAULT_GOAL := build
-.PHONY: test build test-build install pkg-deb pkg-clean pkg-deb-setup pkg-tgz pkg-checksum sync-version docs
+.PHONY: test build test-build install pkg-deb pkg-clean pkg-deb-setup pkg-tgz pkg-checksum sync-version docs echo-vars
