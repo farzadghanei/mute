@@ -1,0 +1,43 @@
+#!/bin/bash
+
+read -r -d '' USAGE <<EOU
+Run static checks
+
+usage $0
+
+options:
+    -h, --help  show this help and exit
+
+exits with code 127 if requirements are not available
+EOU
+
+EX_OK=0
+EX_UNAVAILABLE=127
+
+
+if [[ "$@" =~ '-h' || "$@" =~ 'help' ]]; then
+    echo "$USAGE"
+    exit $EX_OK
+fi
+
+if ! command -v golint >/dev/null; then
+    echo "golint is needed but not available"
+    exit $EX_UNAVAILABLE
+fi
+
+if ! command -v staticcheck >/dev/null; then
+    echo "staticheck is needed but not available (https://staticcheck.io)"
+    exit $EX_UNAVAILABLE
+fi
+
+if ! command -v golangci-lint >/dev/null; then
+    echo "golangci-lint is needed but not available (https://golangci-lint.run/)"
+    exit $EX_UNAVAILABLE
+fi
+
+set -o errexit
+
+go vet ./...
+golint -set_exit_status
+golangci-lint run
+staticcheck ./...

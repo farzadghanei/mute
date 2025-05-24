@@ -90,6 +90,8 @@ build: mute
 
 test:
 	go test -v -race ./...
+	# @TODO: add static checks
+	# if test -z $(TEST_SKIP_STATICCHECKS); then ./scripts/staticchecks; fi
 
 test-build: build
 	./mute test/data/xecho -c 3 > /dev/null; (test "$$?" -eq 3 || false)
