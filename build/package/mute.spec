@@ -1,5 +1,5 @@
 Name: mute
-Version: 0.2.0
+Version: 0.3.0
 Release: 1%{?dist}
 Summary: Run other programs muting the output when configured
 
@@ -48,19 +48,23 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Wed Nov 04 2020 Farzad Ghanei <farzad.ghanei@tutanota.com> 0.2.0-1
+
+* Sat May 24 2025 Farzad Ghanei <644113+farzadghanei@users.noreply.github.com> 0.3.0-1
+- Update dependencies (toml from 0.3.1 to 1.5.0, go from 1.13 to 1.24)
+
+* Wed Nov 04 2020 Farzad Ghanei <644113+farzadghanei@users.noreply.github.com> 0.2.0-1
 - Restructure project layout
 - Restructure Exec, reduce chances of memory allocation failures (Closes: #19)
 - Exec supports pre allocating buffers to prevent extra allocation later
 - Rename constants ENV_* to CamelCase as a more conventional format
 
-* Sun Aug 16 2020 Farzad Ghanei <farzad.ghanei@tutanota.com> 0.1.1-1
+* Sun Aug 16 2020 Farzad Ghanei <644113+farzadghanei@users.noreply.github.com> 0.1.1-1
 - Fix missing new line at the end of the help message (Closes: #15)
 - Fix formatting issues in README
 - Redo Debian packaging, support Debian buster, use gbp (Closes: #12)
 - Add RPM packaging
 
-* Sun Jan 05 2020 Farzad Ghanei <farzad.ghanei@tutanota.com> 0.1.0-1
+* Sun Jan 05 2020 Farzad Ghanei <644113+farzadghanei@users.noreply.github.com> 0.1.0-1
 - Handle signals (Closes: #4)
 - Use environment variables to configure current run
 - Use TOML format configuration file
