@@ -62,13 +62,10 @@ RPM_DEV_SPEC = $(RPM_DEV_TREE)/SPECS/mute-$(MUTE_RPM_VERSION).spec
 # command aliases
 cowbuilder = env DISTRIBUTION=$(DIST) ARCH=$(ARCH) BASEPATH=/var/cache/pbuilder/base-$(DIST)-$(ARCH).cow cowbuilder
 
-
 mute:
 	GOOS=$(OS) GOARCH=$(GOARCH) go build -ldflags $(GOLDFLAGS) cmd/mute.go
 
-
 build: mute
-
 
 test:
 	go test github.com/farzadghanei/mute
@@ -81,7 +78,6 @@ test-build: build
 	output=$$(env MUTE_STDOUT_PATTERN='mute.+' ./mute test/data/xecho 'will be muted.'); test -z "$$output"
 	env MUTE_STDOUT_PATTERN='nottoday' ./mute test/data/xecho 'not muted' | grep -q 'not muted'
 
-
 install: build
 	$(INSTALL_PROGRAM) -d $(DESTDIR)$(bindir)
 	$(INSTALL_PROGRAM) mute $(DESTDIR)$(bindir)
@@ -93,11 +89,10 @@ clean:
 	rm -f mute
 	go clean || true
 
-
 distclean: clean
 
 # override prefix so .deb package installs binaries to /usr/bin instead of /usr/local/bin
-pkg-deb: export prefix = /usr
+pkg-deb: prefix = /usr
 # requires a cowbuilder environment. see pkg-deb-setup
 pkg-deb:
 	git checkout -b $(DEB_BUILD_GIT_BRANCH)
@@ -125,7 +120,7 @@ pkg-tgz: build
 	tar --create --gzip --exclude-vcs --exclude=docs/man/*.rst --file $(PKG_TGZ_PATH) mute README.rst LICENSE docs/man/mute.1
 
 # override prefix so .rpm package installs binaries to /usr/bin instead of /usr/local/bin
-pkg-rpm: export prefix = /usr
+pkg-rpm: prefix = /usr
 # requires golang compiler > 1.13, and rpmdevtools package
 pkg-rpm:
 	(go version | grep -q go1.1[3-9]) || (echo "please install Go lang tools > 1.13. aborting!" && /bin/false)
