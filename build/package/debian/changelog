@@ -1,3 +1,11 @@
+mute (0.3.0-1) UNRELEASED; urgency=low
+
+  [ Farzad Ghanei ]
+
+  * Update dependencies (toml from 0.3.1 to 1.5.0, go from 1.13 to 1.24)
+
+ -- Farzad Ghanei <644113+farzadghanei@users.noreply.github.com>  Sat, 24 May 2025 11:05:40 +0100
+
 mute (0.2.0-1) UNRELEASED; urgency=low
 
   [ Farzad Ghanei ]
@@ -7,7 +15,7 @@ mute (0.2.0-1) UNRELEASED; urgency=low
   * Exec supports pre allocating buffers to prevent extra allocation later
   * Rename constants ENV_* to CamelCase as a more conventional format
 
- -- Farzad Ghanei <farzad.ghanei@tutanota.com>  Wed, 04 Nov 2020 16:40:40 +0100
+ -- Farzad Ghanei <644113+farzadghanei@users.noreply.github.com>  Wed, 04 Nov 2020 16:40:40 +0100
 
 mute (0.1.1-1) UNRELEASED; urgency=low
 
@@ -18,7 +26,7 @@ mute (0.1.1-1) UNRELEASED; urgency=low
   * Redo Debian packaging, support Debian buster, use gbp (Closes: #12)
   * Add RPM packaging
 
- -- Farzad Ghanei <farzad.ghanei@tutanota.com>  Sun, 16 Aug 2020 12:20:40 +0200
+ -- Farzad Ghanei <644113+farzadghanei@users.noreply.github.com>  Sun, 16 Aug 2020 12:20:40 +0200
 
 mute (0.1.0-1) UNRELEASED; urgency=low
 
@@ -29,4 +37,4 @@ mute (0.1.0-1) UNRELEASED; urgency=low
 
   [ Farzad Ghanei ]
 
- -- Farzad Ghanei <farzad.ghanei@tutanota.com>  Sun, 05 Jan 2020 17:36:35 +0100
+ -- Farzad Ghanei <644113+farzadghanei@users.noreply.github.com>  Sun, 05 Jan 2020 17:36:35 +0100

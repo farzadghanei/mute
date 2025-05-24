@@ -4,7 +4,7 @@ Upstream-Contact: Farzad Ghanei
 Source: https://github.com/farzadghanei/mute
 
 Files: *
-Copyright: 2019 Farzad Ghanei <farzad.ghanei@tutanota.com>
+Copyright: 2019 Farzad Ghanei <644113+farzadghanei@users.noreply.github.com>
 License: MIT
 
 Files: BurntSushi/toml/*

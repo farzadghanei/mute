@@ -1,11 +1,13 @@
 Source: mute
-Maintainer: Farzad Ghanei <farzad.ghanei@tutanota.com>
 Section: misc
 Priority: optional
-Standards-Version: 3.9.2
-Build-Depends: debhelper (>= 9), golang-go (>=1.13), git, ca-certificates
+Maintainer: Farzad Ghanei <644113+farzadghanei@users.noreply.github.com>
+Standards-Version: 4.6.2
+Build-Depends: debhelper-compat (= 13), golang-go (>=1.24), git, ca-certificates
 
 Package: mute
 Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: mute programs
  Run other programs muting the output when configured
+
