@@ -49,8 +49,11 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 
-* Sat May 24 2025 Farzad Ghanei <644113+farzadghanei@users.noreply.github.com> 0.3.0-1
+* Sat May 31 2025 Farzad Ghanei <644113+farzadghanei@users.noreply.github.com> 0.3.0-1
 - Update dependencies (toml from 0.3.1 to 1.5.0, go from 1.13 to 1.24)
+- Improve debian packaging (build on trixie, go module cache cleanup)
+- Add staticchecks to tests
+- Run CI pipeline on Github actions
 
 * Wed Nov 04 2020 Farzad Ghanei <644113+farzadghanei@users.noreply.github.com> 0.2.0-1
 - Restructure project layout
