@@ -91,8 +91,7 @@ build: mute
 
 test:
 	go test -v -race ./...
-	# @TODO: add static checks
-	# if test -z $(TEST_SKIP_STATICCHECKS); then ./scripts/staticchecks; fi
+	if test -z $(TEST_SKIP_STATICCHECKS); then ./scripts/staticchecks; fi
 
 test-build: build
 	./mute test/data/xecho -c 3 > /dev/null; (test "$$?" -eq 3 || false)
@@ -122,11 +121,11 @@ clean:
 
 distclean: clean
 
-# override prefix so .deb package installs binaries to /usr/bin instead of /usr/local/bin
-pkg-deb: export prefix = /usr
 # requires a cowbuilder environment. see pkg-deb-setup
 pkg-deb:
-	echo "building a Debian package for mute v$(MUTE_VERSION) with vars: prefix='$(perfix)' DEB_GO_RW='$(DEB_GO_RW)' ..."
+	# override prefix so .deb package installs binaries to /usr/bin instead of /usr/local/bin
+	$(eval export prefix=/usr)
+	echo "building a Debian package for mute v$(MUTE_VERSION) with vars: prefix=$(prefix) DEB_GO_RW=$(DEB_GO_RW) ..."
 	git checkout -b $(DEB_BUILD_GIT_BRANCH)
 	rm -f $(MUTE_DEB_UPSTREAM_TARBAL); tar --exclude-backups --exclude-vcs -zcf $(MUTE_DEB_UPSTREAM_TARBAL) .
 	cp -r build/package/debian .; git add debian; git commit -m 'add debian dir for packaging v$(MUTE_DEB_VERSION)'
