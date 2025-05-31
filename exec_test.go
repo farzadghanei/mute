@@ -74,8 +74,7 @@ func TestCmdCriteriaReturnCommandSpecific(t *testing.T) {
 	crt1 = append(crt1, c1)
 	crt2 = append(crt2, c2)
 
-	var commandsCriteria map[string]Criteria
-	commandsCriteria = make(map[string]Criteria)
+	commandsCriteria := make(map[string]Criteria)
 	commandsCriteria["test"] = crt1
 	commandsCriteria["testcommand"] = crt2
 	commandsCriteria["somethingelse"] = crt1
