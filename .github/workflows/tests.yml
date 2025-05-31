@@ -34,13 +34,13 @@ jobs:
       - name: Install staticcheck
         run: go install honnef.co/go/tools/cmd/staticcheck@latest
 
-      # - name: Run staticcheck
-      #   run: staticcheck ./...
+      - name: Run staticcheck
+        run: staticcheck ./...
 
       - name: Run tests
         run: go test -race -vet=off ./...
 
-      # - name: golangci-lint
-      #   uses: golangci/golangci-lint-action@v6
-      #   with:
-      #     version: v1.64
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.64
