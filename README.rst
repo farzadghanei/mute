@@ -2,8 +2,8 @@
 Mute
 ****
 
-.. image:: https://travis-ci.org/farzadghanei/mute.svg?branch=master
-    :target: https://travis-ci.org/farzadghanei/mute
+.. image:: https://github.com/farzadghanei/mute/workflows/tests/badge.svg
+    :target: https://github.com/farzadghanei/mute/actions
 
 
 ``mute`` runs other programs and mutes the output under configured
