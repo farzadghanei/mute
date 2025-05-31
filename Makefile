@@ -70,6 +70,7 @@ MUTE_DEB_UPSTREAM_VERSION := $(shell echo $(MUTE_DEB_VERSION) | grep --only-matc
 MUTE_DEB_UPSTREAM_TARBAL_PATH := $(abspath $(makefile_dir)/..)
 MUTE_DEB_UPSTREAM_TARBAL := $(MUTE_DEB_UPSTREAM_TARBAL_PATH)/mute_$(MUTE_DEB_UPSTREAM_VERSION).orig.tar.gz
 DEB_BUILD_GIT_BRANCH := pkg-deb-$(MUTE_DEB_VERSION)-$(TIMESTAMP_MINUTE)
+export DEB_GO_RW ?= "yes" # deb packaging mark Go module cache as writable for dh clean
 
 # find rpm version from the spec file. latest version
 # should be in the top tags, first matching 'Version: 0.1.0' and sed clears chars not in version
@@ -125,6 +126,7 @@ distclean: clean
 pkg-deb: export prefix = /usr
 # requires a cowbuilder environment. see pkg-deb-setup
 pkg-deb:
+	echo "building a Debian package for mute v$(MUTE_VERSION) with vars: prefix='$(perfix)' DEB_GO_RW='$(DEB_GO_RW)' ..."
 	git checkout -b $(DEB_BUILD_GIT_BRANCH)
 	rm -f $(MUTE_DEB_UPSTREAM_TARBAL); tar --exclude-backups --exclude-vcs -zcf $(MUTE_DEB_UPSTREAM_TARBAL) .
 	cp -r build/package/debian .; git add debian; git commit -m 'add debian dir for packaging v$(MUTE_DEB_VERSION)'

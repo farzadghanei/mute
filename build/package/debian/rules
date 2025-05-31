@@ -20,5 +20,8 @@ override_dh_clean:
 	# Go modules cache is not writable by default, so
 	# clean will fail to remove it. explicitly make it
 	# writable. See: https://go.dev/ref/mod#module-cache
-	chmod --recursive +w debian/.debhelper/generated/_source/home/go/pkg/
+	echo "running dh_clean override with vars: DEB_GO_RW='$(DEB_GO_RW)' ..."
+	if [ -n "$$DEB_GO_RW" ] && [ -d debian/.debhelper/generated/_source/home/go/pkg/ ]; then \
+		chmod --recursive +w debian/.debhelper/generated/_source/home/go/pkg/; \
+	fi
 	dh_clean
