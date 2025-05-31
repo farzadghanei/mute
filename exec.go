@@ -73,7 +73,9 @@ func execCmd(cmd string, args []string, bufPreAlloc int) *execContext {
 	go func() {
 		sig := <-sigs
 		if execCmd.Process != nil { // signal may arrive before cmd starts
-			execCmd.Process.Signal(sig)
+			if execCmd.Process.Signal(sig) != nil {
+				fmt.Fprintf(os.Stderr, "failed to send signal %v to process %d: %v\n", sig, execCmd.Process.Pid, err)
+			}
 		}
 	}()
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

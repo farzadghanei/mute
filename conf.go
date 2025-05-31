@@ -5,7 +5,6 @@ package mute
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -50,8 +49,7 @@ func (s *StdoutPattern) String() string {
 // NewStdoutPattern returns a pointer to a StdoutPattern object using the regex pattern string
 func NewStdoutPattern(pattern string) *StdoutPattern {
 	var stdp StdoutPattern
-	var re *regexp.Regexp
-	re = regexp.MustCompile(pattern)
+	re := regexp.MustCompile(pattern)
 	stdp = StdoutPattern{Regexp: re}
 	return &stdp
 }
@@ -219,7 +217,7 @@ func (e ConfAccessError) Error() string {
 // ReadConfFile reads config file and returns Conf
 func ReadConfFile(path string) (*Conf, error) {
 	var conf Conf
-	content, err := ioutil.ReadFile(path)
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return &conf, ConfAccessError{err: err, Path: path}
 	}
